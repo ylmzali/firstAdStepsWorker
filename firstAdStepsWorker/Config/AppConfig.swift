@@ -3,29 +3,43 @@ import Foundation
 enum AppConfig {
     // API Configuration
     enum API {
-        static let baseURL = "https://buisyurur.com/api"
+        static let baseURL = "https://buisyurur.com/workersapi"
         static let appToken = "cd786d6d-daf7-4e3f-bff2-24c144c9f013"
         static let tokenHeader = "app_token"
     } 
 
     // API Endpoints
     enum Endpoints {
-        static let requestOTP = "/sendotp"
+        static let requestOTP = "/requestotp"
         static let verifyOTP = "/verifyotp"
         static let getUser = "/getuser"
+        static let addUser = "/adduser"
         static let updateUser = "/updateuser"
         static let deleteUser = "/deleteuser"
+
         static let addRoute = "/addroute"
         static let updateRoute = "/updateroute"
         static let deleteRoute = "/deleteroute"
         static let getRoutes = "/getroutes"
+        static let getRouteTrackings = "/getroutetrackings"
         static let startRouteTracking = "/startRouteTracking"
         static let trackRouteLocation = "/trackRouteLocation"
         static let getRouteTrack = "/getRouteTrack"
         static let uploadCheckpointPhoto = "/uploadCheckpointPhoto"
         static let getCheckpointPhotos = "/getCheckpointPhotos"
+
         static let logEvent = "/logevent"
+
         static let updateDeviceToken = "/updatedevicetoken"
+
+        static let acceptAssignment = "/acceptassignment"
+        static let rejectAssignment = "/rejectassignment"
+        static let updateWorkStatus = "/updateworkstatus"
+        static let getAssignments = "/getassigments"
+        static let getCompanyEmployees = "/getcompanyemployees"
+
+        static let employeeLocationUpdate = "/employee_location_update"
+        static let routeCompletion = "/route_completion"
     }
     
     // Headers

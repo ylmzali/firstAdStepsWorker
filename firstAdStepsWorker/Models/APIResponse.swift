@@ -76,7 +76,7 @@ struct RouteGetResponse: Codable {
 }
 struct RouteGetData: Codable {
     let issetRoute: Bool?
-    let route: Route?
+    let route: Assignment?
 }
 struct RouteGetError: Codable {
     let code: String
@@ -92,7 +92,7 @@ struct RoutesGetResponse: Codable {
 }
 struct RoutesGetData: Codable {
     let issetRoutes: Bool?
-    let routes: [Route]?
+    let routes: [Assignment]?
 }
 struct RoutesGetError: Codable {
     let code: String
@@ -108,9 +108,73 @@ struct RouteCreateResponse: Codable {
 }
 struct RouteCreateData: Codable {
     let isRouteCreated: Bool?
-    let route: Route?
+    let route: Assignment?
 }
 struct RouteCreateError: Codable {
+    let code: String
+    let message: String
+    let details: String
+}
+
+// ROUTE ACTION (Accept/Reject/Status Update)
+struct RouteActionResponse: Codable {
+    let status: String
+    let data: RouteActionData?
+    let error: RouteActionError?
+}
+struct RouteActionData: Codable {
+    let isActionCompleted: Bool?
+    let route: Assignment?
+}
+struct RouteActionError: Codable {
+    let code: String
+    let message: String
+    let details: String
+}
+
+// UPDATE WORK STATUS
+struct UpdateWorkStatusResponse: Codable {
+    let status: String
+    let data: UpdateWorkStatusData?
+    let error: UpdateWorkStatusError?
+}
+struct UpdateWorkStatusData: Codable {
+    let message: String?
+    let updatedAt: String?
+}
+struct UpdateWorkStatusError: Codable {
+    let code: String
+    let message: String
+    let details: String
+}
+
+// GET PENDING ASSIGNMENTS
+struct PendingAssignmentsResponse: Codable {
+    let status: String
+    let data: PendingAssignmentsData?
+    let error: PendingAssignmentsError?
+}
+struct PendingAssignmentsData: Codable {
+    let issetRoutes: Bool?
+    let routes: [Assignment]?
+}
+struct PendingAssignmentsError: Codable {
+    let code: String
+    let message: String
+    let details: String
+}
+
+// ASSIGNMENT ACTION (Accept/Reject)
+struct AssignmentActionResponse: Codable {
+    let status: String
+    let data: AssignmentActionData?
+    let error: AssignmentActionError?
+}
+struct AssignmentActionData: Codable {
+    let isActionCompleted: Bool?
+    let assignment: Assignment?
+}
+struct AssignmentActionError: Codable {
     let code: String
     let message: String
     let details: String

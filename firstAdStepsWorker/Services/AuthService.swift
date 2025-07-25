@@ -19,7 +19,7 @@ class AuthService {
         ]
         
         makeRequest(
-            endpoint: "requestotp",
+            endpoint: AppConfig.Endpoints.requestOTP,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -47,7 +47,7 @@ class AuthService {
         ]
         
         makeRequest(
-            endpoint: "verifyotp",
+            endpoint: AppConfig.Endpoints.verifyOTP,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -72,7 +72,7 @@ class AuthService {
         ]
         
         makeRequest(
-            endpoint: "updatedevicetoken",
+            endpoint: AppConfig.Endpoints.updateDeviceToken,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -86,7 +86,7 @@ class AuthService {
         parameters: [String: Any]? = nil,
         completion: @escaping (Result<T, ServiceError>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             completion(.failure(.invalidUrl))
             return
         }

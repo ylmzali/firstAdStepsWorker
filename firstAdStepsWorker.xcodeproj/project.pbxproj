@@ -32,7 +32,6 @@
 		C125C92D2E170CEA00237532 /* LogManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C91C2E170CEA00237532 /* LogManager.swift */; };
 		C125C92E2E170CEA00237532 /* NavigationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C91D2E170CEA00237532 /* NavigationManager.swift */; };
 		C125C92F2E170CEA00237532 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C91E2E170CEA00237532 /* NotificationManager.swift */; };
-		C125C9302E170CEA00237532 /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C91F2E170CEA00237532 /* Route.swift */; };
 		C125C9312E170CEA00237532 /* ServiceError.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9202E170CEA00237532 /* ServiceError.swift */; };
 		C125C9322E170CEA00237532 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9212E170CEA00237532 /* SessionManager.swift */; };
 		C125C9332E170CEA00237532 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9222E170CEA00237532 /* User.swift */; };
@@ -42,10 +41,8 @@
 		C125C93D2E170CF400237532 /* RouteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9372E170CF400237532 /* RouteService.swift */; };
 		C125C93E2E170CF400237532 /* UserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9382E170CF400237532 /* UserService.swift */; };
 		C125C9412E170CFE00237532 /* AntDesign.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C93F2E170CFE00237532 /* AntDesign.swift */; };
-		C125C9482E170D0500237532 /* ActiveRoutesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9422E170D0500237532 /* ActiveRoutesViewModel.swift */; };
 		C125C9492E170D0500237532 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9432E170D0500237532 /* AuthViewModel.swift */; };
 		C125C94A2E170D0500237532 /* EmployeeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9442E170D0500237532 /* EmployeeViewModel.swift */; };
-		C125C94B2E170D0500237532 /* RouteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9452E170D0500237532 /* RouteViewModel.swift */; };
 		C125C94C2E170D0500237532 /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9462E170D0500237532 /* UserViewModel.swift */; };
 		C125C9712E170D0D00237532 /* ActiveRoutesMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C94D2E170D0D00237532 /* ActiveRoutesMapView.swift */; };
 		C125C9722E170D0D00237532 /* MapWithPolylines.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C94E2E170D0D00237532 /* MapWithPolylines.swift */; };
@@ -59,21 +56,25 @@
 		C125C97C2E170D0D00237532 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95B2E170D0D00237532 /* NotificationsView.swift */; };
 		C125C97D2E170D0D00237532 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95D2E170D0D00237532 /* EditProfileSheet.swift */; };
 		C125C97E2E170D0D00237532 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95E2E170D0D00237532 /* ProfileView.swift */; };
-		C125C97F2E170D0D00237532 /* NewRouteSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9602E170D0D00237532 /* NewRouteSheet.swift */; };
-		C125C9802E170D0D00237532 /* RouteCategorySection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9612E170D0D00237532 /* RouteCategorySection.swift */; };
-		C125C9812E170D0D00237532 /* RouteCreationSuccessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9622E170D0D00237532 /* RouteCreationSuccessView.swift */; };
-		C125C9822E170D0D00237532 /* RouteDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9632E170D0D00237532 /* RouteDescriptionView.swift */; };
-		C125C9832E170D0D00237532 /* RouteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9642E170D0D00237532 /* RouteDetailView.swift */; };
-		C125C9842E170D0D00237532 /* RouteFuturisticStatBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9652E170D0D00237532 /* RouteFuturisticStatBox.swift */; };
-		C125C9852E170D0D00237532 /* RouteProposalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9662E170D0D00237532 /* RouteProposalView.swift */; };
-		C125C9862E170D0D00237532 /* RouteRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9672E170D0D00237532 /* RouteRowView.swift */; };
-		C125C9872E170D0D00237532 /* RoutesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9682E170D0D00237532 /* RoutesView.swift */; };
-		C125C9882E170D0D00237532 /* RouteViewHeaderStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C9692E170D0D00237532 /* RouteViewHeaderStats.swift */; };
-		C125C9892E170D0D00237532 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96A2E170D0D00237532 /* StatusBadge.swift */; };
-		C125C98A2E170D0D00237532 /* WorkPlanDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96B2E170D0D00237532 /* WorkPlanDetailView.swift */; };
 		C125C98B2E170D0D00237532 /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96D2E170D0D00237532 /* DebugView.swift */; };
 		C125C98C2E170D0D00237532 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96E2E170D0D00237532 /* RootView.swift */; };
 		C125C98D2E170D0D00237532 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96F2E170D0D00237532 /* SplashView.swift */; };
+		C1865AD52E2C97C100145654 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD42E2C97C000145654 /* Assignment.swift */; };
+		C1865AD82E2CE97700145654 /* AssignmentStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD72E2CE97700145654 /* AssignmentStatusBadge.swift */; };
+		C1865AD92E2CE97700145654 /* AssignmentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD62E2CE97700145654 /* AssignmentListView.swift */; };
+		C1865ADB2E2CF98900145654 /* AssignmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865ADA2E2CF98900145654 /* AssignmentDetailView.swift */; };
+		C1B91EE12E172AC800E78392 /* PreviewTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE02E172AC800E78392 /* PreviewTestView.swift */; };
+		C1B91EE32E1737B700E78392 /* MainViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE22E1737B700E78392 /* MainViews.swift */; };
+		C1B91EE52E173DFE00E78392 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE42E173DFE00E78392 /* LocationManager.swift */; };
+		C1B91EE72E17E95300E78392 /* ActiveRoutesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE62E17E95300E78392 /* ActiveRoutesViewModel.swift */; };
+		C1B91EFD2E17EC5D00E78392 /* RoutesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EF02E17EC5D00E78392 /* RoutesView.swift */; };
+		C1B91F022E17ED8300E78392 /* RouteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F012E17ED8300E78392 /* RouteViewModel.swift */; };
+		C1B91F042E17F58200E78392 /* RouteCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F032E17F58200E78392 /* RouteCard.swift */; };
+		C1B91F062E17F5BF00E78392 /* RouteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F052E17F5BF00E78392 /* RouteDetailView.swift */; };
+		C1B91F082E17F5E300E78392 /* DetailRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F072E17F5E300E78392 /* DetailRow.swift */; };
+		C1B91F0A2E17F60C00E78392 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F092E17F60C00E78392 /* StatusBadge.swift */; };
+		C1DF99842E2E3FA4002750B5 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */; };
+		C1DF99862E310577002750B5 /* RouteTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99852E310577002750B5 /* RouteTrackingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,7 +124,6 @@
 		C125C91C2E170CEA00237532 /* LogManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogManager.swift; sourceTree = "<group>"; };
 		C125C91D2E170CEA00237532 /* NavigationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NavigationManager.swift; sourceTree = "<group>"; };
 		C125C91E2E170CEA00237532 /* NotificationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
-		C125C91F2E170CEA00237532 /* Route.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
 		C125C9202E170CEA00237532 /* ServiceError.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServiceError.swift; sourceTree = "<group>"; };
 		C125C9212E170CEA00237532 /* SessionManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		C125C9222E170CEA00237532 /* User.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
@@ -133,10 +133,8 @@
 		C125C9372E170CF400237532 /* RouteService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteService.swift; sourceTree = "<group>"; };
 		C125C9382E170CF400237532 /* UserService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
 		C125C93F2E170CFE00237532 /* AntDesign.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AntDesign.swift; sourceTree = "<group>"; };
-		C125C9422E170D0500237532 /* ActiveRoutesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActiveRoutesViewModel.swift; sourceTree = "<group>"; };
 		C125C9432E170D0500237532 /* AuthViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		C125C9442E170D0500237532 /* EmployeeViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmployeeViewModel.swift; sourceTree = "<group>"; };
-		C125C9452E170D0500237532 /* RouteViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteViewModel.swift; sourceTree = "<group>"; };
 		C125C9462E170D0500237532 /* UserViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		C125C94D2E170D0D00237532 /* ActiveRoutesMapView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActiveRoutesMapView.swift; sourceTree = "<group>"; };
 		C125C94E2E170D0D00237532 /* MapWithPolylines.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MapWithPolylines.swift; sourceTree = "<group>"; };
@@ -150,23 +148,27 @@
 		C125C95B2E170D0D00237532 /* NotificationsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		C125C95D2E170D0D00237532 /* EditProfileSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditProfileSheet.swift; sourceTree = "<group>"; };
 		C125C95E2E170D0D00237532 /* ProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		C125C9602E170D0D00237532 /* NewRouteSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NewRouteSheet.swift; sourceTree = "<group>"; };
-		C125C9612E170D0D00237532 /* RouteCategorySection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteCategorySection.swift; sourceTree = "<group>"; };
-		C125C9622E170D0D00237532 /* RouteCreationSuccessView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteCreationSuccessView.swift; sourceTree = "<group>"; };
-		C125C9632E170D0D00237532 /* RouteDescriptionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteDescriptionView.swift; sourceTree = "<group>"; };
-		C125C9642E170D0D00237532 /* RouteDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteDetailView.swift; sourceTree = "<group>"; };
-		C125C9652E170D0D00237532 /* RouteFuturisticStatBox.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteFuturisticStatBox.swift; sourceTree = "<group>"; };
-		C125C9662E170D0D00237532 /* RouteProposalView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteProposalView.swift; sourceTree = "<group>"; };
-		C125C9672E170D0D00237532 /* RouteRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteRowView.swift; sourceTree = "<group>"; };
-		C125C9682E170D0D00237532 /* RoutesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoutesView.swift; sourceTree = "<group>"; };
-		C125C9692E170D0D00237532 /* RouteViewHeaderStats.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteViewHeaderStats.swift; sourceTree = "<group>"; };
-		C125C96A2E170D0D00237532 /* StatusBadge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
-		C125C96B2E170D0D00237532 /* WorkPlanDetailView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WorkPlanDetailView.swift; sourceTree = "<group>"; };
 		C125C96D2E170D0D00237532 /* DebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
 		C125C96E2E170D0D00237532 /* RootView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C125C96F2E170D0D00237532 /* SplashView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		C125C98E2E170D1400237532 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C125C9902E170D2200237532 /* firstAdStepsWorker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = firstAdStepsWorker.entitlements; sourceTree = "<group>"; };
+		C1865AD42E2C97C000145654 /* Assignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assignment.swift; sourceTree = "<group>"; };
+		C1865AD62E2CE97700145654 /* AssignmentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentListView.swift; sourceTree = "<group>"; };
+		C1865AD72E2CE97700145654 /* AssignmentStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStatusBadge.swift; sourceTree = "<group>"; };
+		C1865ADA2E2CF98900145654 /* AssignmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentDetailView.swift; sourceTree = "<group>"; };
+		C1B91EE02E172AC800E78392 /* PreviewTestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewTestView.swift; sourceTree = "<group>"; };
+		C1B91EE22E1737B700E78392 /* MainViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViews.swift; sourceTree = "<group>"; };
+		C1B91EE42E173DFE00E78392 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		C1B91EE62E17E95300E78392 /* ActiveRoutesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActiveRoutesViewModel.swift; sourceTree = "<group>"; };
+		C1B91EF02E17EC5D00E78392 /* RoutesView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RoutesView.swift; sourceTree = "<group>"; };
+		C1B91F012E17ED8300E78392 /* RouteViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RouteViewModel.swift; sourceTree = "<group>"; };
+		C1B91F032E17F58200E78392 /* RouteCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCard.swift; sourceTree = "<group>"; };
+		C1B91F052E17F5BF00E78392 /* RouteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDetailView.swift; sourceTree = "<group>"; };
+		C1B91F072E17F5E300E78392 /* DetailRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailRow.swift; sourceTree = "<group>"; };
+		C1B91F092E17F60C00E78392 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
+		C1DF99852E310577002750B5 /* RouteTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteTrackingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -263,6 +265,7 @@
 		C125C9082E170CD200237532 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */,
 				C125C9012E170CD200237532 /* CustomTextField.swift */,
 				C125C9032E170CD200237532 /* Helpers.swift */,
 				C125C9042E170CD200237532 /* LoadingView.swift */,
@@ -288,6 +291,7 @@
 				C125C9142E170CEA00237532 /* APIResponse.swift */,
 				C125C9152E170CEA00237532 /* AppDelegate.swift */,
 				C125C9162E170CEA00237532 /* AppStateManager.swift */,
+				C1865AD42E2C97C000145654 /* Assignment.swift */,
 				C125C9172E170CEA00237532 /* CentralErrorManager.swift */,
 				C125C9182E170CEA00237532 /* Enums.swift */,
 				C125C9192E170CEA00237532 /* ErrorResponse.swift */,
@@ -295,7 +299,6 @@
 				C125C91C2E170CEA00237532 /* LogManager.swift */,
 				C125C91D2E170CEA00237532 /* NavigationManager.swift */,
 				C125C91E2E170CEA00237532 /* NotificationManager.swift */,
-				C125C91F2E170CEA00237532 /* Route.swift */,
 				C125C9202E170CEA00237532 /* ServiceError.swift */,
 				C125C9212E170CEA00237532 /* SessionManager.swift */,
 				C125C9222E170CEA00237532 /* User.swift */,
@@ -310,6 +313,7 @@
 				C125C9352E170CF400237532 /* AuthService.swift */,
 				C125C9362E170CF400237532 /* EmployeeService.swift */,
 				C125C9372E170CF400237532 /* RouteService.swift */,
+				C1B91EE42E173DFE00E78392 /* LocationManager.swift */,
 				C125C9382E170CF400237532 /* UserService.swift */,
 			);
 			path = Services;
@@ -326,10 +330,10 @@
 		C125C9472E170D0500237532 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
-				C125C9422E170D0500237532 /* ActiveRoutesViewModel.swift */,
+				C1B91EE62E17E95300E78392 /* ActiveRoutesViewModel.swift */,
 				C125C9432E170D0500237532 /* AuthViewModel.swift */,
 				C125C9442E170D0500237532 /* EmployeeViewModel.swift */,
-				C125C9452E170D0500237532 /* RouteViewModel.swift */,
+				C1B91F012E17ED8300E78392 /* RouteViewModel.swift */,
 				C125C9462E170D0500237532 /* UserViewModel.swift */,
 			);
 			path = ViewModels;
@@ -369,6 +373,7 @@
 				C125C9592E170D0D00237532 /* MainView.swift */,
 				C125C95B2E170D0D00237532 /* NotificationsView.swift */,
 				C125C95A2E170D0D00237532 /* NotificationListView.swift */,
+				C1B91EE22E1737B700E78392 /* MainViews.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -382,25 +387,6 @@
 			path = Profile;
 			sourceTree = "<group>";
 		};
-		C125C96C2E170D0D00237532 /* Route */ = {
-			isa = PBXGroup;
-			children = (
-				C125C9682E170D0D00237532 /* RoutesView.swift */,
-				C125C9642E170D0D00237532 /* RouteDetailView.swift */,
-				C125C9632E170D0D00237532 /* RouteDescriptionView.swift */,
-				C125C9602E170D0D00237532 /* NewRouteSheet.swift */,
-				C125C9612E170D0D00237532 /* RouteCategorySection.swift */,
-				C125C9622E170D0D00237532 /* RouteCreationSuccessView.swift */,
-				C125C96A2E170D0D00237532 /* StatusBadge.swift */,
-				C125C9672E170D0D00237532 /* RouteRowView.swift */,
-				C125C9652E170D0D00237532 /* RouteFuturisticStatBox.swift */,
-				C125C9662E170D0D00237532 /* RouteProposalView.swift */,
-				C125C9692E170D0D00237532 /* RouteViewHeaderStats.swift */,
-				C125C96B2E170D0D00237532 /* WorkPlanDetailView.swift */,
-			);
-			path = Route;
-			sourceTree = "<group>";
-		};
 		C125C9702E170D0D00237532 /* Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -408,13 +394,30 @@
 				C125C9552E170D0D00237532 /* Authentication */,
 				C125C9572E170D0D00237532 /* Common */,
 				C125C95C2E170D0D00237532 /* Home */,
-				C125C96C2E170D0D00237532 /* Route */,
 				C125C95F2E170D0D00237532 /* Profile */,
+				C1B91EF42E17EC5D00E78392 /* Route */,
 				C125C96D2E170D0D00237532 /* DebugView.swift */,
+				C1B91EE02E172AC800E78392 /* PreviewTestView.swift */,
 				C125C96E2E170D0D00237532 /* RootView.swift */,
 				C125C96F2E170D0D00237532 /* SplashView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		C1B91EF42E17EC5D00E78392 /* Route */ = {
+			isa = PBXGroup;
+			children = (
+				C1865ADA2E2CF98900145654 /* AssignmentDetailView.swift */,
+				C1865AD62E2CE97700145654 /* AssignmentListView.swift */,
+				C1865AD72E2CE97700145654 /* AssignmentStatusBadge.swift */,
+				C1B91EF02E17EC5D00E78392 /* RoutesView.swift */,
+				C1B91F032E17F58200E78392 /* RouteCard.swift */,
+				C1B91F052E17F5BF00E78392 /* RouteDetailView.swift */,
+				C1DF99852E310577002750B5 /* RouteTrackingView.swift */,
+				C1B91F072E17F5E300E78392 /* DetailRow.swift */,
+				C1B91F092E17F60C00E78392 /* StatusBadge.swift */,
+			);
+			path = Route;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -550,65 +553,66 @@
 				C125C9332E170CEA00237532 /* User.swift in Sources */,
 				C125C9312E170CEA00237532 /* ServiceError.swift in Sources */,
 				C125C9242E170CEA00237532 /* ActiveRoutesResponse.swift in Sources */,
+				C1B91F0A2E17F60C00E78392 /* StatusBadge.swift in Sources */,
 				C125C9272E170CEA00237532 /* AppStateManager.swift in Sources */,
+				C1865AD82E2CE97700145654 /* AssignmentStatusBadge.swift in Sources */,
+				C1865AD92E2CE97700145654 /* AssignmentListView.swift in Sources */,
 				C125C9322E170CEA00237532 /* SessionManager.swift in Sources */,
 				C125C92E2E170CEA00237532 /* NavigationManager.swift in Sources */,
-				C125C98A2E170D0D00237532 /* WorkPlanDetailView.swift in Sources */,
-				C125C9842E170D0D00237532 /* RouteFuturisticStatBox.swift in Sources */,
 				C125C97A2E170D0D00237532 /* MainView.swift in Sources */,
+				C1865ADB2E2CF98900145654 /* AssignmentDetailView.swift in Sources */,
 				C125C98C2E170D0D00237532 /* RootView.swift in Sources */,
-				C125C94B2E170D0500237532 /* RouteViewModel.swift in Sources */,
 				C125C93C2E170CF400237532 /* EmployeeService.swift in Sources */,
+				C1865AD52E2C97C100145654 /* Assignment.swift in Sources */,
+				C1B91EE52E173DFE00E78392 /* LocationManager.swift in Sources */,
+				C1DF99862E310577002750B5 /* RouteTrackingView.swift in Sources */,
 				C125C9412E170CFE00237532 /* AntDesign.swift in Sources */,
 				C125C8D92E170AB000237532 /* ContentView.swift in Sources */,
 				C125C9722E170D0D00237532 /* MapWithPolylines.swift in Sources */,
 				C125C92F2E170CEA00237532 /* NotificationManager.swift in Sources */,
 				C125C9742E170D0D00237532 /* OTPView.swift in Sources */,
 				C125C9122E170CDE00237532 /* AppConfig.swift in Sources */,
-				C125C9872E170D0D00237532 /* RoutesView.swift in Sources */,
-				C125C9802E170D0D00237532 /* RouteCategorySection.swift in Sources */,
+				C1B91EE72E17E95300E78392 /* ActiveRoutesViewModel.swift in Sources */,
 				C125C9752E170D0D00237532 /* PhoneVerificationView.swift in Sources */,
-				C125C9812E170D0D00237532 /* RouteCreationSuccessView.swift in Sources */,
-				C125C9482E170D0500237532 /* ActiveRoutesViewModel.swift in Sources */,
 				C125C98D2E170D0D00237532 /* SplashView.swift in Sources */,
 				C125C8D72E170AB000237532 /* firstAdStepsWorkerApp.swift in Sources */,
 				C125C9282E170CEA00237532 /* CentralErrorManager.swift in Sources */,
-				C125C9852E170D0D00237532 /* RouteProposalView.swift in Sources */,
-				C125C97F2E170D0D00237532 /* NewRouteSheet.swift in Sources */,
 				C125C97C2E170D0D00237532 /* NotificationsView.swift in Sources */,
 				C125C93E2E170CF400237532 /* UserService.swift in Sources */,
-				C125C9302E170CEA00237532 /* Route.swift in Sources */,
+				C1B91F022E17ED8300E78392 /* RouteViewModel.swift in Sources */,
 				C125C9792E170D0D00237532 /* HomeView.swift in Sources */,
 				C125C90E2E170CD200237532 /* MeshGradientButton.swift in Sources */,
-				C125C9832E170D0D00237532 /* RouteDetailView.swift in Sources */,
 				C125C92A2E170CEA00237532 /* ErrorResponse.swift in Sources */,
 				C125C9252E170CEA00237532 /* APIResponse.swift in Sources */,
-				C125C9862E170D0D00237532 /* RouteRowView.swift in Sources */,
+				C1B91F062E17F5BF00E78392 /* RouteDetailView.swift in Sources */,
 				C125C9782E170D0D00237532 /* ErrorView.swift in Sources */,
 				C125C93D2E170CF400237532 /* RouteService.swift in Sources */,
 				C125C90A2E170CD200237532 /* DateFormatterExtension.swift in Sources */,
 				C125C97D2E170D0D00237532 /* EditProfileSheet.swift in Sources */,
 				C125C90B2E170CD200237532 /* Helpers.swift in Sources */,
 				C125C94A2E170D0500237532 /* EmployeeViewModel.swift in Sources */,
-				C125C9822E170D0D00237532 /* RouteDescriptionView.swift in Sources */,
 				C125C98B2E170D0D00237532 /* DebugView.swift in Sources */,
 				C125C9262E170CEA00237532 /* AppDelegate.swift in Sources */,
 				C125C9492E170D0500237532 /* AuthViewModel.swift in Sources */,
 				C125C90D2E170CD200237532 /* MeshGradientBackground.swift in Sources */,
+				C1B91EE12E172AC800E78392 /* PreviewTestView.swift in Sources */,
+				C1B91F042E17F58200E78392 /* RouteCard.swift in Sources */,
 				C125C97B2E170D0D00237532 /* NotificationListView.swift in Sources */,
 				C125C94C2E170D0500237532 /* UserViewModel.swift in Sources */,
-				C125C9882E170D0D00237532 /* RouteViewHeaderStats.swift in Sources */,
 				C125C92C2E170CEA00237532 /* Log.swift in Sources */,
 				C125C9092E170CD200237532 /* CustomTextField.swift in Sources */,
 				C125C9712E170D0D00237532 /* ActiveRoutesMapView.swift in Sources */,
 				C125C97E2E170D0D00237532 /* ProfileView.swift in Sources */,
+				C1B91EFD2E17EC5D00E78392 /* RoutesView.swift in Sources */,
 				C125C93A2E170CF400237532 /* ActiveRoutesService.swift in Sources */,
-				C125C9892E170D0D00237532 /* StatusBadge.swift in Sources */,
 				C125C92D2E170CEA00237532 /* LogManager.swift in Sources */,
 				C125C90C2E170CD200237532 /* LoadingView.swift in Sources */,
 				C125C9292E170CEA00237532 /* Enums.swift in Sources */,
+				C1DF99842E2E3FA4002750B5 /* CustomTabBar.swift in Sources */,
+				C1B91EE32E1737B700E78392 /* MainViews.swift in Sources */,
 				C125C9762E170D0D00237532 /* RegisterFormView.swift in Sources */,
 				C125C93B2E170CF400237532 /* AuthService.swift in Sources */,
+				C1B91F082E17F5E300E78392 /* DetailRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -772,6 +776,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = firstAdStepsWorker/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -811,6 +816,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = firstAdStepsWorker/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

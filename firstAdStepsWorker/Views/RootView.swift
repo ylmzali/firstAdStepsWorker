@@ -10,6 +10,7 @@ struct RootView: View {
                     destinationView(for: destination)
                 }
         }
+        .preferredColorScheme(.light)
     }
     
     @ViewBuilder
@@ -60,4 +61,5 @@ extension NavigationManager.Destination: NavigationDestination {}
         .environmentObject(SessionManager.shared)
         .environmentObject(CentralErrorManager.shared)
         .environmentObject(LogManager.shared)
+        .environmentObject(AppStateManager.shared)
 } 

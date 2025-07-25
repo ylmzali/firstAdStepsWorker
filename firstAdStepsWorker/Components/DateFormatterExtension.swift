@@ -1,6 +1,6 @@
 //
 //  DateFormatterExtension.swift
-//  firstAdStepsEmp2
+//  firstAdStepsWorker
 //
 //  Created by Ali YILMAZ on 17.06.2025.
 //
@@ -68,12 +68,20 @@ extension DateFormatter {
             formatter.unitsStyle = .full
         return formatter.localizedString(for: date, relativeTo: Date())
     }
+    
+    // Kısa Türkçe tarih formatı (örn: 2 Temmuz 2025)
+    static func turkishShortDateString(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "d MMMM yyyy"
+        return formatter.string(from: date)
+    }
 }
 
 // String extension'ı ile kolay kullanım
 extension String {
     var toDate: Date? {
-        return DateFormatter.dateFromISO8601(self)
+        return DateFormatter.dateFromYMD(self) ?? DateFormatter.dateFromISO8601(self)
     }
     
     var toTurkishDate: String? {
@@ -99,6 +107,16 @@ extension String {
     var toRelativeTime: String? {
         guard let date = toDate else { return nil }
         return DateFormatter.relativeTimeString(from: date)
+    }
+    
+    var toTurkishShortDate: String? {
+        if let date = DateFormatter.dateFromYMD(self) {
+            return DateFormatter.turkishShortDateString(from: date)
+        }
+        if let date = DateFormatter.dateFromISO8601(self) {
+            return DateFormatter.turkishShortDateString(from: date)
+        }
+        return nil
     }
 }
 

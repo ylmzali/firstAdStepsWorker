@@ -18,6 +18,40 @@ enum AppView {
     case main
 }
 
+// WorkStatus Enum
+enum WorkStatus: String, CaseIterable, Codable {
+    case available = "available"
+    case onRoute = "on_route"
+    case offDuty = "off_duty"
+    case busy = "busy"
+    
+    var displayName: String {
+        switch self {
+        case .available:
+            return "Müsait"
+        case .onRoute:
+            return "Rota Üzerinde"
+        case .offDuty:
+            return "İzinde"
+        case .busy:
+            return "Meşgul"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .available:
+            return .green
+        case .onRoute:
+            return .blue
+        case .offDuty:
+            return .orange
+        case .busy:
+            return .red
+        }
+    }
+}
+
 // HTTPMethod.swift
 enum HTTPMethod: String {
     case get = "GET"

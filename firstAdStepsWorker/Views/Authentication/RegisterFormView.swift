@@ -101,6 +101,7 @@ struct RegisterFormView: View {
         .background(AntColors.background)
         .navigationTitle("Kayıt Ol")
         .navigationBarBackButtonHidden(true)
+        .preferredColorScheme(.light)
         /*
         .toolbar {
             ToolbarItem(placement: .principal) {

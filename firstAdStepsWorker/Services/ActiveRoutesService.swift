@@ -32,7 +32,7 @@ class ActiveRoutesService {
         }
         
         makeRequest(
-            endpoint: "getroutetrackings",
+            endpoint: AppConfig.Endpoints.getRouteTrackings,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -45,7 +45,7 @@ class ActiveRoutesService {
         parameters: [String: Any]? = nil,
         completion: @escaping (Result<T, ServiceError>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             completion(.failure(.invalidUrl))
             return
         }

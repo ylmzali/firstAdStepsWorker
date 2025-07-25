@@ -44,7 +44,7 @@ struct DebugView: View {
                         }
                     }
                     .padding()
-                    .background(Color("SecondaryBackground"))
+                    .background(Theme.secondaryBackground)
                     .cornerRadius(12)
                     
                     // Device Token Info
@@ -85,7 +85,7 @@ struct DebugView: View {
                         }
                     }
                     .padding()
-                    .background(Color("SecondaryBackground"))
+                    .background(Theme.secondaryBackground)
                     .cornerRadius(12)
                     
                     // User Status
@@ -113,7 +113,7 @@ struct DebugView: View {
                         }
                     }
                     .padding()
-                    .background(Color("SecondaryBackground"))
+                    .background(Theme.secondaryBackground)
                     .cornerRadius(12)
                     
                     // Action Buttons
@@ -130,7 +130,7 @@ struct DebugView: View {
                 }
                 .padding()
             }
-            .background(Color("Background"))
+            .background(Theme.background)
             .navigationTitle("Debug")
             .navigationBarTitleDisplayMode(.inline)
         }

@@ -1,6 +1,6 @@
 //
 //  RouteService.swift
-//  firstAdStepsEmp2
+//  firstAdStepsWorker
 //
 //  Created by Ali YILMAZ on 15.06.2025.
 //
@@ -15,62 +15,136 @@ class RouteService {
     
     private init() {}
     
-    // MARK: - ROUTE GET Request
-    func getRoute(
+    // MARK: - Get Pending Assignments
+    func getPendingAssignments(
         userId: String,
-        routeId: String,
-        completion: @escaping (Result<RouteGetResponse, ServiceError>) -> Void
+        completion: @escaping (Result<[Assignment], ServiceError>) -> Void
     ) {
         let parameters = [
-            "userId": userId,
-            "routeId": routeId
+            "user_id": userId
         ]
         
         makeRequest(
-            endpoint: "getroute",
+            endpoint: AppConfig.Endpoints.getAssignments,
             method: .post,
-            parameters: parameters,
-            completion: completion
-        )
-    }
-
-    // MARK: - ROUTES GET Request
-    func getRoutes(
-        userId: String,
-        completion: @escaping (Result<RoutesGetResponse, ServiceError>) -> Void
-    ) {
-        let parameters = [
-            "userId": userId
-        ]
-        
-        makeRequest(
-            endpoint: "getroutes",
-            method: .post,
-            parameters: parameters,
-            completion: completion
-        )
+            parameters: parameters
+        ) { (result: Result<PendingAssignmentsResponse, ServiceError>) in
+            switch result {
+            case .success(let response):
+                if response.status == "success",
+                   let data = response.data,
+                   let issetRoutes = data.issetRoutes,
+                   issetRoutes == true,
+                   let assignments = data.routes {
+                    completion(.success(assignments))
+                } else if let error = response.error {
+                    completion(.failure(.custom(message: error.message)))
+                } else {
+                    completion(.success([]))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
     
-    // MARK: - ROUTE CREATE Request
-    func createRoute(
-        route: Route,
-        completion: @escaping (Result<RouteCreateResponse, ServiceError>) -> Void
+    // MARK: - Accept Assignment
+    func acceptAssignment(
+        assignmentId: String,
+        completion: @escaping (Result<Bool, ServiceError>) -> Void
     ) {
-        guard let routeDict = route.asDictionary else {
-            completion(.failure(.invalidData))
-            return
-        }
-
         let parameters = [
-            "route": routeDict
+            "assignment_id": assignmentId
         ]
         
         makeRequest(
-            endpoint: "createroute",
+            endpoint: AppConfig.Endpoints.acceptAssignment,
             method: .post,
-            parameters: parameters,
-            completion: completion
-        )
+            parameters: parameters
+        ) { (result: Result<AssignmentActionResponse, ServiceError>) in
+            switch result {
+            case .success(let response):
+                if response.status == "success" {
+                    completion(.success(true))
+                } else if let error = response.error {
+                    completion(.failure(.custom(message: error.message)))
+                } else {
+                    completion(.failure(.invalidData))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // MARK: - Reject Assignment
+    func rejectAssignment(
+        assignmentId: String,
+        reason: String?,
+        completion: @escaping (Result<Bool, ServiceError>) -> Void
+    ) {
+        var parameters: [String: Any] = [
+            "assignment_id": assignmentId
+        ]
+        
+        if let reason = reason, !reason.isEmpty {
+            parameters["reason"] = reason
+        }
+        
+        makeRequest(
+            endpoint: AppConfig.Endpoints.rejectAssignment,
+            method: .post,
+            parameters: parameters
+        ) { (result: Result<AssignmentActionResponse, ServiceError>) in
+            switch result {
+            case .success(let response):
+                if response.status == "success" {
+                    completion(.success(true))
+                } else if let error = response.error {
+                    completion(.failure(.custom(message: error.message)))
+                } else {
+                    completion(.failure(.invalidData))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    // Genel assignment/route sorgusu
+    func getAssignments(
+        userId: String,
+        filters: [String: String]? = nil,
+        completion: @escaping (Result<[Assignment], ServiceError>) -> Void
+    ) {
+        var parameters: [String: Any] = ["user_id": userId]
+        if let filters = filters {
+            for (key, value) in filters {
+                parameters[key] = value
+            }
+        }
+        makeRequest(
+            endpoint: AppConfig.Endpoints.getAssignments, // veya uygun endpoint
+            method: .post,
+            parameters: parameters
+        ) { (result: Result<PendingAssignmentsResponse, ServiceError>) in
+            switch result {
+            case .success(let response):
+                if response.status == "success",
+                   let data = response.data,
+                   let issetRoutes = data.issetRoutes,
+                   issetRoutes == true,
+                   let assignments = data.routes {
+                    completion(.success(assignments))
+                } else if let error = response.error {
+                    completion(.failure(.custom(message: error.message)))
+                } else {
+                    completion(.success([]))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
     
     private func makeRequest<T: Decodable>(
@@ -79,7 +153,7 @@ class RouteService {
         parameters: [String: Any]? = nil,
         completion: @escaping (Result<T, ServiceError>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             completion(.failure(.invalidUrl))
             return
         }
@@ -123,7 +197,7 @@ class RouteService {
                 case 200...299:
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        // Backend'den camelCase geliyor, snake_case conversion'a gerek yok
                         let result = try decoder.decode(T.self, from: data)
                         completion(.success(result))
                     } catch {

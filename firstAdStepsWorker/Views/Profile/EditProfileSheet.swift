@@ -45,7 +45,7 @@ struct EditProfileSheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                Theme.background.ignoresSafeArea()
                 
                 if showOTPVerification {
                     otpVerificationView
@@ -55,23 +55,23 @@ struct EditProfileSheet: View {
             }
             .navigationTitle(showOTPVerification ? "Telefon Doğrulaması" : "Profili Düzenle")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color.white, for: .navigationBar)
             .toolbar {
                 if !showOTPVerification {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Kapat") {
+                        Button("İptal") {
                             dismiss()
                         }
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.primary)
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Kaydet") {
                             checkPhoneChangeAndSave()
                         }
                         .disabled(sessionManager.isLoading)
-                        .foregroundColor(.white)
+                        .foregroundColor(Theme.primary)
                     }
                 }
             }
@@ -114,17 +114,30 @@ struct EditProfileSheet: View {
     
     // MARK: - OTP Verification View
     private var otpVerificationView: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 32) {
             VStack(spacing: 16) {
-                Text("Telefon Doğrulaması")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                
-                Text("\(selectedCountry.code) \(phoneNumber) numaralı telefonunuza gönderilen 4 haneli doğrulama kodunu giriniz.")
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.white.opacity(0.8))
-                    .padding(.horizontal)
+                // Header
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.primary.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                        
+                        Image(systemName: "phone.fill")
+                            .font(.system(size: 32, weight: .medium))
+                            .foregroundColor(Theme.primary)
+                    }
+                    
+                    Text("Telefon Doğrulaması")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    Text("\(selectedCountry.code) \(phoneNumber) numaralı telefonunuza gönderilen 6 haneli doğrulama kodunu giriniz.")
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                        .padding(.horizontal)
+                }
             }
             
             otpInputView
@@ -134,20 +147,21 @@ struct EditProfileSheet: View {
             
             if let errorMessage = authViewModel.errorMessage {
                 Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
+                    .foregroundColor(Theme.error)
+                    .font(.system(size: 14))
+                    .padding(.horizontal)
             }
             
             Spacer()
         }
-        .padding()
+        .padding(24)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Kapat") {
                     hideKeyboard()
                 }
-                .foregroundColor(.accentColor)
+                .foregroundColor(Theme.primary)
                 .font(.system(size: 16, weight: .medium))
             }
         }
@@ -155,20 +169,20 @@ struct EditProfileSheet: View {
     
     // MARK: - OTP Input View
     private var otpInputView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             TextField("000000", text: $otpCode)
                 .keyboardType(.numberPad)
                 .multilineTextAlignment(.center)
                 .font(.system(size: 32, weight: .bold, design: .monospaced))
                 .frame(height: 60)
                 .frame(maxWidth: .infinity)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(15)
+                .background(Color.white)
+                .cornerRadius(12)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Theme.primary.opacity(0.3), lineWidth: 1.5)
                 )
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
                 .onChange(of: otpCode) { newValue in
                     // Sadece rakam girişine izin ver
                     let filtered = newValue.filter { $0.isNumber }
@@ -185,7 +199,7 @@ struct EditProfileSheet: View {
             HStack(spacing: 8) {
                 ForEach(0..<6, id: \.self) { index in
                     Circle()
-                        .fill(index < otpCode.count ? Color.blue : Color.white.opacity(0.3))
+                        .fill(index < otpCode.count ? Theme.primary : Theme.gray300)
                         .frame(width: 12, height: 12)
                         .scaleEffect(index < otpCode.count ? 1.2 : 1.0)
                         .animation(.easeInOut(duration: 0.2), value: otpCode.count)
@@ -200,12 +214,14 @@ struct EditProfileSheet: View {
         Group {
             if timeRemaining > 0 {
                 Text("Kalan süre: \(timeRemaining / 60):\(String(format: "%02d", timeRemaining % 60))")
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 14))
             } else {
                 Button("Kodu Tekrar Gönder") {
                     requestOTP()
                 }
-                .foregroundColor(.blue)
+                .foregroundColor(Theme.primary)
+                .font(.system(size: 14, weight: .medium))
             }
         }
     }
@@ -216,11 +232,11 @@ struct EditProfileSheet: View {
             verifyOTP()
         }) {
             Text("Doğrula")
-                .font(.headline)
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(otpCode.count == 6 ? Color.blue : Color.gray)
+                .background(otpCode.count == 6 ? Theme.primary : Theme.gray400)
                 .cornerRadius(12)
         }
         .disabled(otpCode.count != 6 || sessionManager.isLoading)
@@ -233,7 +249,8 @@ struct EditProfileSheet: View {
             otpCode = ""
             timer?.invalidate()
         }
-        .foregroundColor(.red)
+        .foregroundColor(Theme.error)
+        .font(.system(size: 16, weight: .medium))
     }
     
     // MARK: - Profile Edit Form View
@@ -241,25 +258,23 @@ struct EditProfileSheet: View {
         ScrollView {
             VStack(spacing: 24) {
                 personalInfoSection
-                companyInfoSection
                 
                 if let error = userViewModel.errorMessage {
                     Text(error)
-                        .foregroundColor(.red)
-                        .font(.caption)
+                        .foregroundColor(Theme.error)
+                        .font(.system(size: 14))
                         .padding(.horizontal)
                 }
             }
-            .padding()
+            .padding(20)
         }
-        .background(Color.black)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Kapat") {
                     hideKeyboard()
                 }
-                .foregroundColor(.white)
+                .foregroundColor(Theme.primary)
                 .font(.system(size: 16, weight: .medium))
             }
         }
@@ -267,11 +282,18 @@ struct EditProfileSheet: View {
     
     // MARK: - Personal Info Section
     private var personalInfoSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Kişisel Bilgiler")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 4)
+        VStack(alignment: .leading, spacing: 20) {
+            HStack {
+                Image(systemName: "person.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(Theme.primary)
+                
+                Text("Kişisel Bilgiler")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+            }
             
             VStack(spacing: 16) {
                 customTextField("Ad", text: $firstName)
@@ -280,18 +302,12 @@ struct EditProfileSheet: View {
                 phoneField
             }
         }
-        .padding(.bottom)
-        /*
-        .padding()
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                )
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white)
+                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         )
-         */
     }
     
     // MARK: - Company Info Section
@@ -324,22 +340,22 @@ struct EditProfileSheet: View {
     
     // MARK: - Custom Text Field
     private func customTextField(_ placeholder: String, text: Binding<String>, keyboardType: UIKeyboardType = .default, autocapitalization: TextInputAutocapitalization = .sentences) -> some View {
-        TextField("", text: text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.6)))
-            .foregroundColor(.white)
+        TextField("", text: text, prompt: Text(placeholder).foregroundColor(Theme.gray500))
+            .foregroundColor(.primary)
             .textFieldStyle(PlainTextFieldStyle())
             .keyboardType(keyboardType)
             .textInputAutocapitalization(autocapitalization)
-            .padding()
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.white.opacity(0.1))
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Theme.gray200, lineWidth: 1)
                     )
             )
-            .accentColor(.white)
-            .tint(.white)
+            .accentColor(Theme.primary)
+            .tint(Theme.primary)
     }
     
     // MARK: - Phone Field
@@ -349,33 +365,34 @@ struct EditProfileSheet: View {
                 HStack {
                     Text(selectedCountry.flag)
                     Text(selectedCountry.code)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(.primary)
+                        .font(.system(size: 16, weight: .medium))
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .font(.system(size: 12))
+                        .foregroundColor(Theme.gray400)
                 }
                 .padding(.horizontal, 12)
                 .frame(height: 52)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(8)
+                .background(Color.white)
+                .cornerRadius(12)
             }
             .sheet(isPresented: $showCountryPicker) {
                 UserUpdateCountryPickerView(selectedCountry: $selectedCountry, countries: countries)
             }
             
-            TextField("", text: $phoneNumber, prompt: Text("Telefon").foregroundColor(.white.opacity(0.6)))
-                .foregroundColor(.white)
+            TextField("", text: $phoneNumber, prompt: Text("Telefon").foregroundColor(Theme.gray500))
+                .foregroundColor(.primary)
                 .textFieldStyle(PlainTextFieldStyle())
                 .keyboardType(.numberPad)
                 .padding(.horizontal, 12)
                 .frame(height: 52)
-                .background(Color.clear)
-                .accentColor(.white)
-                .tint(.white)
+                .background(Color.white)
+                .accentColor(Theme.primary)
+                .tint(Theme.primary)
         }
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Theme.gray200, lineWidth: 1)
         )
     }
     
@@ -518,18 +535,19 @@ struct UserUpdateCountryPickerView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                Theme.background.ignoresSafeArea()
                 
                 List(countries, id: \.self) { country in
                     HStack {
                         Text(country.flag)
                             .font(.title2)
                         Text(country.name)
-                            .foregroundColor(.white)
+                            .foregroundColor(.primary)
+                            .font(.system(size: 16, weight: .medium))
                         Spacer()
                         if country.code == selectedCountry.code {
                             Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
+                                .foregroundColor(Theme.primary)
                         }
                     }
                     .contentShape(Rectangle())
@@ -537,22 +555,22 @@ struct UserUpdateCountryPickerView: View {
                         selectedCountry = country
                         dismiss()
                     }
-                    .listRowBackground(Color.black)
+                    .listRowBackground(Color.white)
                 }
                 .scrollContentBackground(.hidden)
-                .background(Color.black)
+                .background(Theme.background)
             }
             .navigationTitle("Ülke Seç")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color.white, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Kapat") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(Theme.primary)
                 }
             }
         }

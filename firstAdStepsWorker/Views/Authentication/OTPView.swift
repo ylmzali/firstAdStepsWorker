@@ -11,7 +11,6 @@ struct OTPView: View {
     @State private var otpCode = ""
     @State private var timeRemaining = 120 // 2 minutes
     @State private var timer: Timer?
-    @State private var errorMessage: String?
     @FocusState private var isInputFocused: Bool
     
     var body: some View {
@@ -85,8 +84,9 @@ struct OTPView: View {
                                 countryCode: countryCode,
                                 otpRequestId: data.otpRequestId
                             )
-                        case .failure:
-                            break
+                        case .failure(let error):
+                            print("❌ OTP request error: \(error.localizedDescription)")
+                            // Error AuthViewModel'de zaten set ediliyor
                         }
                     }
                 }
@@ -110,8 +110,9 @@ struct OTPView: View {
                             print("❌ User verification failed")
                             navigationManager.goToRegistration(phoneNumber: phoneNumber, countryCode: countryCode)
                         }
-                    case .failure:
-                        break
+                    case .failure(let error):
+                        print("❌ OTP verification error: \(error.localizedDescription)")
+                        // Error AuthViewModel'de zaten set ediliyor
                     }
                 }
             }) {
@@ -125,10 +126,12 @@ struct OTPView: View {
             }
             .disabled(otpCode.count != 6 || SessionManager.shared.isLoading)
             
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
+            if let viewModelError = viewModel.errorMessage {
+                Text(viewModelError)
                     .foregroundColor(.red)
-                    .padding()
+                    .font(.system(size: 14, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
             }
             
             Spacer()
@@ -138,6 +141,8 @@ struct OTPView: View {
         .navigationBarHidden(true)
         .onAppear {
             startTimer()
+            // Error'ları temizle
+            viewModel.errorMessage = nil
             // Auto-focus input when view appears
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isInputFocused = true
@@ -151,6 +156,7 @@ struct OTPView: View {
                 LoadingView()
             }
         }
+        .preferredColorScheme(.light)
     }
     
     private func handleOTPChange(_ newValue: String) {
@@ -171,6 +177,11 @@ struct OTPView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 isInputFocused = false
             }
+        }
+        
+        // OTP değiştiğinde error'ları temizle
+        if viewModel.errorMessage != nil && !otpCode.isEmpty {
+            viewModel.errorMessage = nil
         }
     }
     

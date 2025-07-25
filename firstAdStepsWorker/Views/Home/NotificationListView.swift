@@ -9,7 +9,9 @@ struct NotificationListView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.black.ignoresSafeArea()
+                Color.clear
+                    // .purpleGradientBackground()
+                    .ignoresSafeArea()
                 
                 Group {
                     if isLoading {
@@ -19,21 +21,22 @@ struct NotificationListView: View {
                                 .scaleEffect(1.2)
                         }
                     } else if notifications.isEmpty {
-                        VStack(spacing: 20) {
+                        VStack(spacing: 8) {
                             Image(systemName: "bell.slash")
                                 .font(.system(size: 60))
-                                .foregroundColor(.white.opacity(0.3))
+                                .foregroundColor(.black.opacity(0.3))
                             
                             Text("Henüz bildirim yok")
                                 .font(.title2)
-                                .foregroundColor(.white.opacity(0.7))
+                                .foregroundColor(.black.opacity(0.7))
                             
                             Text("Yeni bildirimler geldiğinde burada görünecek")
                                 .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(.black.opacity(0.5))
                                 .multilineTextAlignment(.center)
                         }
                         .padding()
+                        .padding(.bottom, 100)
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 12) {
@@ -52,22 +55,22 @@ struct NotificationListView: View {
             }
             .navigationTitle("Bildirimler")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.black, for: .navigationBar)
+            .toolbarBackground(Color.white, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 12) {
                         Button("Yenile") {
                             loadNotifications()
                         }
-                        .foregroundColor(.blue)
+                        .foregroundColor(Theme.purple400)
                         .font(.subheadline)
                         
                         Button("Temizle") {
                             clearAllNotifications()
                         }
-                        .foregroundColor(.red)
+                        .foregroundColor(Theme.error)
                         .font(.subheadline)
                         .disabled(notifications.isEmpty)
                     }
@@ -76,6 +79,7 @@ struct NotificationListView: View {
             .onAppear {
                 loadNotifications()
             }
+            .preferredColorScheme(.light)
         }
     }
     
@@ -156,12 +160,12 @@ struct NotificationRowView: View {
                     if let routeId = notification.request.content.userInfo["routeId"] as? String {
                         HStack(spacing: 4) {
                             Image(systemName: "location.fill")
-                                .foregroundColor(.blue)
+                                .foregroundColor(Theme.purple400)
                                 .font(.caption2)
                             
                             Text("Rota #\(routeId)")
                                 .font(.caption2)
-                                .foregroundColor(.blue)
+                                .foregroundColor(Theme.purple400)
                         }
                     }
                 }
@@ -185,17 +189,17 @@ struct NotificationRowView: View {
         if let notificationType = notification.request.content.userInfo["notificationType"] as? String {
             switch notificationType {
             case "routeStarted":
-                return .green
+                return Theme.success
             case "routeCompleted":
-                return .purple
+                return Theme.purple400
             case "reportReady":
-                return .orange
+                return Theme.warning
             case "paymentPending":
-                return .red
+                return Theme.error
             case "readyToStart":
-                return .yellow
+                return Theme.accentYellow
             case "routePlanReady":
-                return .cyan
+                return Theme.accentBlue
             default:
                 return .white.opacity(0.8)
             }
@@ -213,5 +217,8 @@ struct NotificationRowView: View {
 #Preview {
     NotificationListView()
         .environmentObject(NotificationManager.shared)
-        .preferredColorScheme(.dark)
+        .environmentObject(NavigationManager.shared)
+        .environmentObject(SessionManager.shared)
+        .environmentObject(AppStateManager.shared)
+        .preferredColorScheme(.light)
 } 

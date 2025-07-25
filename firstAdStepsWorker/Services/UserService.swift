@@ -17,7 +17,7 @@ class UserService {
         ]
         
         makeRequest(
-            endpoint: "getuser",
+            endpoint: AppConfig.Endpoints.getUser,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -59,7 +59,7 @@ class UserService {
         }
         
         makeRequest(
-            endpoint: "adduser",
+            endpoint: AppConfig.Endpoints.addUser,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -96,7 +96,26 @@ class UserService {
         }
         
         makeRequest(
-            endpoint: "updateuser",
+            endpoint: AppConfig.Endpoints.updateUser,
+            method: .post,
+            parameters: parameters,
+            completion: completion
+        )
+    }
+    
+    // MARK: - Update Work Status
+    func updateWorkStatus(
+        userId: String,
+        workStatus: WorkStatus,
+        completion: @escaping (Result<UpdateWorkStatusResponse, ServiceError>) -> Void
+    ) {
+        let parameters = [
+            "user_id": userId,
+            "work_status": workStatus.rawValue
+        ]
+        
+        makeRequest(
+            endpoint: AppConfig.Endpoints.updateWorkStatus,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -110,7 +129,7 @@ class UserService {
         parameters: [String: Any]? = nil,
         completion: @escaping (Result<T, ServiceError>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             completion(.failure(.invalidUrl))
             return
         }

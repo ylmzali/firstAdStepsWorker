@@ -222,6 +222,7 @@ struct PhoneVerificationView: View {
         .onTapGesture {
             isPhoneFieldFocused = false
         }
+        .preferredColorScheme(.light)
     }
 }
 

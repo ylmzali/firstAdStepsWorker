@@ -1,5 +1,6 @@
 import UIKit
 import SwiftUI
+import CoreLocation
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -11,6 +12,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Notification izinlerini kontrol et ve gerekirse iste
         checkAndRequestNotificationPermissions()
         
+        // Konum izinlerini kontrol et ve gerekirse iste
+        checkAndRequestLocationPermissions()
+        
         return true
     }
     
@@ -19,7 +23,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Navigation bar görünümü
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color("Background"))
+        appearance.backgroundColor = UIColor(Theme.background)
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         
@@ -179,6 +183,55 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func applicationWillEnterForeground(_ application: UIApplication) {
         print("⬆️ AppDelegate: Uygulama ön plana geldi")
         // Uygulama ön plana geldiğinde
+    }
+    
+    // MARK: - Location Permission Management
+    
+    private func checkAndRequestLocationPermissions() {
+        print("📍 AppDelegate: Konum izinleri kontrol ediliyor...")
+        
+        let locationManager = CLLocationManager()
+        let status = locationManager.authorizationStatus
+        
+        print("📍 AppDelegate: Mevcut konum izni durumu: \(status.rawValue)")
+        
+        switch status {
+        case .notDetermined:
+            print("📍 AppDelegate: Konum izni henüz belirlenmemiş, izin isteniyor...")
+            requestLocationPermission()
+            
+        case .denied, .restricted:
+            print("📍 AppDelegate: Konum izni reddedilmiş veya kısıtlanmış")
+            // Kullanıcıya bilgi verilebilir ama zorla istenmez
+            
+        case .authorizedWhenInUse:
+            print("📍 AppDelegate: WhenInUse izni var, Always izni isteniyor...")
+            requestLocationPermission()
+            
+        case .authorizedAlways:
+            print("📍 AppDelegate: Konum izni zaten verilmiş (Always)")
+            
+        @unknown default:
+            print("📍 AppDelegate: Bilinmeyen konum izni durumu")
+        }
+    }
+    
+    private func requestLocationPermission() {
+        print("📍 AppDelegate: Konum izni isteniyor...")
+        
+        let locationManager = CLLocationManager()
+        
+        // Önce WhenInUse izni iste
+        print("📍 AppDelegate: WhenInUse izni isteniyor...")
+        locationManager.requestWhenInUseAuthorization()
+        
+        // Kısa bir süre sonra Always izni iste
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            print("📍 AppDelegate: Always izni isteniyor...")
+            locationManager.requestAlwaysAuthorization()
+        }
+        
+        print("📍 AppDelegate: Konum izni istekleri gönderildi")
     }
     
     // MARK: - Deep Link Handling

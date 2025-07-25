@@ -356,4 +356,10 @@ extension Notification.Name {
     // Deep Link ve Navigation
     static let deepLinkToRoute = Notification.Name("deepLinkToRoute")
     static let navigateToRoute = Notification.Name("navigateToRoute")
+    static let navigateToTab = Notification.Name("navigateToTab")
+    
+    // Location Permission Notifications
+    static let locationPermissionRequested = Notification.Name("locationPermissionRequested")
+    static let locationPermissionGranted = Notification.Name("locationPermissionGranted")
+    static let locationPermissionDenied = Notification.Name("locationPermissionDenied")
 } 

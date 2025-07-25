@@ -28,6 +28,7 @@ struct firstAdStepsWorkerApp: App {
                 .environmentObject(logManager)
                 .environmentObject(appStateManager)
                 .environmentObject(notificationManager)
+                .preferredColorScheme(.light)
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)) { _ in
                     // Uygulama kapatılmadan önce son temizlik işlemleri
                 }

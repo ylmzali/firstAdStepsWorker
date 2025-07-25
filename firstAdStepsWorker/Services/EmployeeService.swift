@@ -19,7 +19,7 @@ class EmployeeService {
         ]
         
         makeRequest(
-            endpoint: "getcompanyemployees",
+            endpoint: AppConfig.Endpoints.getCompanyEmployees,
             method: .post,
             parameters: parameters,
             completion: completion
@@ -33,7 +33,7 @@ class EmployeeService {
         parameters: [String: Any]? = nil,
         completion: @escaping (Result<T, ServiceError>) -> Void
     ) {
-        guard let url = URL(string: "\(baseURL)/\(endpoint)") else {
+        guard let url = URL(string: "\(baseURL)\(endpoint)") else {
             completion(.failure(.invalidUrl))
             return
         }

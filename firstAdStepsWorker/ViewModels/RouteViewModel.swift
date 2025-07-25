@@ -1,6 +1,6 @@
 //
 //  AddRouteViewModel.swift
-//  firstAdStepsEmp2
+//  firstAdStepsWorker
 //
 //  Created by Ali YILMAZ on 15.06.2025.
 //
@@ -9,157 +9,126 @@ import Combine
 
 class RouteViewModel: ObservableObject {
     @Published var errorMessage: String?
-    @Published var routes: [Route]
-    @Published var formVal: Route
+    @Published var assignments: [Assignment] = [] // Bekleyen teklifler
+    @Published var routes: [Assignment] = []      // Kabul edilen rotalar
+    @Published var isLoading: Bool = false
 
     private var cancellables = Set<AnyCancellable>()
     private let routeService = RouteService.shared
 
-    init(routes: [Route] = [], formVal: Route) {
+    init(routes: [Assignment] = []) {
         self.routes = routes
-        self.formVal = formVal
+        
+        // Demo rotalar ekle (sadece preview için)
+        #if DEBUG
+        if routes.isEmpty {
+            // self.routes = createDemoAssignments()
+        }
+        #endif
     }
     
-    func resetForm() {
-        self.formVal = Route(
-            id: UUID().uuidString,
-            userId: SessionManager.shared.currentUser?.id ?? "",
-            title: "",
-            description: "",
-            status: .request_received,
-            assignedDate: nil,
-            completion: 0,
-            shareWithEmployees: false,
-            sharedEmployeeIds: [],
-            createdAt: ISO8601DateFormatter().string(from: Date())
-        )
+    private func createDemoAssignments() -> [Assignment] {
+        return [
+            Assignment(
+                id: "1",
+                planId: "1",
+                scheduleDate: "2025-07-24",
+                startTime: "16:00:00",
+                endTime: "21:00:00",
+                routeType: "area_route",
+                startLat: "0.00000000",
+                startLng: "0.00000000",
+                endLat: "0.00000000",
+                endLng: "0.00000000",
+                centerLat: "41.02296500",
+                centerLng: "29.02028500",
+                radiusMeters: "1000",
+                mapSnapshotUrl: nil,
+                mapSnapshotCreatedAt: nil,
+                status: "draft",
+                createdBy: "1",
+                createdAt: "2025-07-20 23:02:51",
+                assignmentScheduleId: "49",
+                assignmentScreenId: "1",
+                assignmentEmployeeId: "7",
+                assignmentOfferDescription: "Kadıköy merkez ve çevresinde mobil ekran reklamları. Toplam 5 nokta, yaklaşık 3 saat sürecek.",
+                assignmentOfferBudget: "400.00",
+                assignmentStatus: .pending,
+                assignmentId: "31",
+                assignmentCreatedAt: "2025-07-20 23:03:14"
+            ),
+            Assignment(
+                id: "2",
+                planId: "2",
+                scheduleDate: "2025-07-25",
+                startTime: "10:00:00",
+                endTime: "15:00:00",
+                routeType: "fixed_route",
+                startLat: "0.00000000",
+                startLng: "0.00000000",
+                endLat: "0.00000000",
+                endLng: "0.00000000",
+                centerLat: "41.03553300",
+                centerLng: "28.97588400",
+                radiusMeters: "0",
+                mapSnapshotUrl: nil,
+                mapSnapshotCreatedAt: nil,
+                status: "draft",
+                createdBy: "1",
+                createdAt: "2025-07-21 10:00:00",
+                assignmentScheduleId: "50",
+                assignmentScreenId: "2",
+                assignmentEmployeeId: "8",
+                assignmentOfferDescription: "Beşiktaş semtinde sabit ekran reklamları. Barbaros Bulvarı ve çevresi. 4 nokta, 2.5 saat.",
+                assignmentOfferBudget: "350.00",
+                assignmentStatus: .accepted,
+                assignmentId: "32",
+                assignmentCreatedAt: "2025-07-21 10:05:00"
+            )
+            // ... başka demo assignmentlar ekleyebilirsin
+        ]
     }
 
     // Kullanıcı bilgisini sessiondan alıp rotaları yükler
+    func loadAssignments() {
+        guard let userId = SessionManager.shared.currentUser?.id else { return }
+        SessionManager.shared.isLoading = true
+        errorMessage = nil
+        routeService.getAssignments(userId: userId, filters: ["type": "assignment"]) { [weak self] result in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                SessionManager.shared.isLoading = false
+                switch result {
+                case .success(let assignments):
+                    self.assignments = assignments
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+    // Kabul edilen rotalar (accepted routes)
     func loadRoutes() {
-        // SessionManager.shared veya mevcut session yönetici sınıfınızdan userId alın
-        guard let userId = SessionManager.shared.currentUser?.id else {
-            self.errorMessage = "Kullanıcı oturumu bulunamadı."
-            SessionManager.shared.isAuthenticated = false
-            return
-        }
-        getRoutes(userId: userId) { _ in }
-    }
-
-    func getRoute(
-        userId: String,
-        routeId: String,
-        completion: @escaping (Result<RouteGetData, ServiceError>) -> Void
-    ) {
+        guard let userId = SessionManager.shared.currentUser?.id else { return }
         SessionManager.shared.isLoading = true
         errorMessage = nil
-
-        routeService.getRoute(
-            userId: userId,
-            routeId: routeId
-        ) { [weak self] result in
+        routeService.getAssignments(userId: userId, filters: ["type": "route"]) { [weak self] result in
             guard let self = self else { return }
-            
             DispatchQueue.main.async {
                 SessionManager.shared.isLoading = false
                 switch result {
-                case .success(let response):
-                    if response.status == "success",
-                        let data = response.data,
-                        let issetRoute = data.issetRoute,
-                        issetRoute == true
-                        // let route = data.route
-                    {
-                        completion(.success(data))
-                    } else if let error = response.error {
-                        self.errorMessage = error.message
-                        completion(.failure(.custom(message: error.message)))
-                    } else {
-                        self.errorMessage = "Rotalar getirilemedi"
-                        completion(.failure(.invalidData))
-                    }
+                case .success(let assignments):
+                    self.routes = assignments
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
                 }
             }
         }
     }
 
-    func getRoutes(
-        userId: String,
-        completion: @escaping (Result<RoutesGetData, ServiceError>) -> Void
-    ) {
-        SessionManager.shared.isLoading = true
-        errorMessage = nil
-
-        routeService.getRoutes(
-            userId: userId
-        ) { [weak self] result in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                SessionManager.shared.isLoading = false
-                switch result {
-                case .success(let response):
-                    if response.status == "success",
-                        let data = response.data, 
-                        let issetRoutes = data.issetRoutes,
-                        issetRoutes == true,
-                        let loadedRoutes = data.routes
-                    {
-                        self.routes = loadedRoutes
-                        completion(.success(data))
-                    } else if let error = response.error {
-                        self.errorMessage = error.message
-                        completion(.failure(.custom(message: error.message)))
-                    } else {
-                        self.errorMessage = "Rotalar getirilemedi"
-                        completion(.failure(.invalidData))
-                    }
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
-                }
-            }
-        }
-    }
-    
-    func createRoute(
-        route: Route,
-        completion: @escaping (Result<RouteCreateData, ServiceError>) -> Void
-    ) {
-        SessionManager.shared.isLoading = true
-        errorMessage = nil
-        
-        routeService.createRoute(
-            route: route
-        ) { [weak self] result in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                SessionManager.shared.isLoading = false
-                switch result {
-                case .success(let response):
-                    if response.status == "success",
-                        let data = response.data, 
-                        let isRouteCreated = data.isRouteCreated, 
-                        isRouteCreated == true 
-                    {
-                        completion(.success(data))
-                    } else if let error = response.error {
-                        self.errorMessage = error.message
-                        completion(.failure(.custom(message: error.message)))
-                    } else {
-                        self.errorMessage = "Rota oluşturulamadı"
-                        completion(.failure(.invalidData))
-                    }
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
-                }
-            }
-        }
+    // Sadece bekleyen assignment'ları döndürür
+    var pendingAssignments: [Assignment] {
+        assignments.filter { $0.assignmentStatus == .pending }
     }
 
     /*
@@ -193,119 +162,61 @@ class RouteViewModel: ObservableObject {
     }
      */
 
-    // MARK: - Plan Management Functions
-    
-    func approvePlan(
-        routeId: String,
-        note: String? = nil,
+    // MARK: - Assignment Action Functions
+    func acceptAssignment(
+        assignmentId: String,
         completion: @escaping (Result<Bool, ServiceError>) -> Void
     ) {
         SessionManager.shared.isLoading = true
         errorMessage = nil
         
-        // TODO: Backend API call for plan approval
-        // Bu fonksiyon plan_ready durumundaki rotayı payment_pending durumuna geçirir
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            SessionManager.shared.isLoading = false
+        routeService.acceptAssignment(
+            assignmentId: assignmentId
+        ) { [weak self] result in
+            guard let self = self else { return }
             
-            // Simulated success - in real app, this would be API call
-            if let index = self.routes.firstIndex(where: { $0.id == routeId }) {
-                self.routes[index].status = .payment_pending
-                completion(.success(true))
-            } else {
-                self.errorMessage = "Rota bulunamadı"
-                completion(.failure(.custom(message: "Rota bulunamadı")))
+            DispatchQueue.main.async {
+                SessionManager.shared.isLoading = false
+                switch result {
+                case .success(_):
+                    completion(.success(true))
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    completion(.failure(error))
+                }
             }
         }
     }
     
-    func rejectPlan(
-        routeId: String,
-        rejectionType: PlanRejectionType,
-        note: String? = nil,
+    func rejectAssignment(
+        assignmentId: String,
+        reason: String?,
         completion: @escaping (Result<Bool, ServiceError>) -> Void
     ) {
         SessionManager.shared.isLoading = true
         errorMessage = nil
         
-        // TODO: Backend API call for plan rejection
-        // Bu fonksiyon plan_ready durumundaki rotayı plan_rejected durumuna geçirir
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            SessionManager.shared.isLoading = false
+        routeService.rejectAssignment(
+            assignmentId: assignmentId,
+            reason: reason
+        ) { [weak self] result in
+            guard let self = self else { return }
             
-            // Simulated success - in real app, this would be API call
-            if let index = self.routes.firstIndex(where: { $0.id == routeId }) {
-                self.routes[index].status = .plan_rejected
-                self.routes[index].proposalRejectionNote = note
-                self.routes[index].proposalRejectionDate = ISO8601DateFormatter().string(from: Date())
-                completion(.success(true))
-            } else {
-                self.errorMessage = "Rota bulunamadı"
-                completion(.failure(.custom(message: "Rota bulunamadı")))
-            }
-        }
-    }
-    
-    func cancelRoute(
-        routeId: String,
-        completion: @escaping (Result<Bool, ServiceError>) -> Void
-    ) {
-        SessionManager.shared.isLoading = true
-        errorMessage = nil
-        
-        // TODO: Backend API call for route cancellation
-        // Bu fonksiyon rotayı cancelled durumuna geçirir
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            SessionManager.shared.isLoading = false
-            
-            // Simulated success - in real app, this would be API call
-            if let index = self.routes.firstIndex(where: { $0.id == routeId }) {
-                self.routes[index].status = .cancelled
-                completion(.success(true))
-            } else {
-                self.errorMessage = "Rota bulunamadı"
-                completion(.failure(.custom(message: "Rota bulunamadı")))
-            }
-        }
-    }
-    
-    func requestNewPlan(
-        routeId: String,
-        completion: @escaping (Result<Bool, ServiceError>) -> Void
-    ) {
-        SessionManager.shared.isLoading = true
-        errorMessage = nil
-        
-        // TODO: Backend API call for new plan request
-        // Bu fonksiyon plan_rejected durumundaki rotayı request_received durumuna geçirir
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            SessionManager.shared.isLoading = false
-            
-            // Simulated success - in real app, this would be API call
-            if let index = self.routes.firstIndex(where: { $0.id == routeId }) {
-                self.routes[index].status = .request_received
-                self.routes[index].proposalRejectionNote = nil
-                self.routes[index].proposalRejectionDate = nil
-                completion(.success(true))
-            } else {
-                self.errorMessage = "Rota bulunamadı"
-                completion(.failure(.custom(message: "Rota bulunamadı")))
+            DispatchQueue.main.async {
+                SessionManager.shared.isLoading = false
+                switch result {
+                case .success(_):
+                    completion(.success(true))
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    completion(.failure(error))
+                }
             }
         }
     }
 }
 
 // MARK: - Supporting Enums
-
-enum PlanRejectionType {
-    case withNote
-    case requestNewPlan
-    case cancelCompletely
-}
 
 extension Encodable {
     var asDictionary: [String: Any]? {

@@ -168,6 +168,40 @@ class UserViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Update Work Status
+    func updateWorkStatus(
+        userId: String,
+        workStatus: WorkStatus,
+        completion: @escaping (Result<Bool, ServiceError>) -> Void
+    ) {
+        SessionManager.shared.isLoading = true
+        errorMessage = nil
+        
+        userService.updateWorkStatus(userId: userId, workStatus: workStatus) { [weak self] result in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                SessionManager.shared.isLoading = false
+                
+                switch result {
+                case .success(let response):
+                    if response.status == "success" {
+                        completion(.success(true))
+                    } else if let error = response.error {
+                        self.errorMessage = error.message
+                        completion(.failure(.custom(message: error.message)))
+                    } else {
+                        self.errorMessage = "Çalışma durumu güncellenemedi"
+                        completion(.failure(.invalidData))
+                    }
+                case .failure(let error):
+                    self.errorMessage = error.localizedDescription
+                    completion(.failure(error))
+                }
+            }
+        }
+    }
+    
     // MARK: - Refresh User Data
     func refreshUserData(
         userId: String,

@@ -1,20 +1,20 @@
 import SwiftUI
 
-// Ant Design renk paleti
+// Mor ağırlıklı modern renk paleti
 enum AntColors {
-    static let primary = Color("Primary")
-    static let success = Color("Success")
-    static let warning = Color("Warning")
-    static let error = Color("Error")
+    static let primary = Theme.purple400
+    static let success = Theme.success
+    static let warning = Theme.warning
+    static let error = Theme.error
     
     // Nötr renkler
-    static let text = Color("Text")
-    static let secondaryText = Color("SecondaryText")
+    static let text = Theme.gray800
+    static let secondaryText = Theme.gray600
     static let disabledText = Color(hex: "#000000").opacity(0.25)
-    static let border = Color(hex: "#d9d9d9")
-    static let divider = Color(hex: "#f0f0f0")
-    static let background = Color("Background")
-    static let tableHeader = Color(hex: "#fafafa")
+    static let border = Color(hex: "#E8E4FF")
+    static let divider = Color(hex: "#F0F0FF")
+    static let background = Color(hex: "F8F8FF")
+    static let tableHeader = Color(hex: "#FAF8FF")
 }
 
 // Ant Design metin boyutları
@@ -90,43 +90,70 @@ extension Color {
 }
 
 struct Theme {
-    // Ana Renkler
-    static let blue400 = Color(hex: "008cf5")    // Canlı Mavi
-    static let yellow400 = Color(hex: "fac400")  // Parlak Sarı
-    static let pink400 = Color(hex: "ff16a2")    // Neon Pembe
-    static let purple400 = Color(hex: "332a7c")  // Koyu Mor
-    static let red400 = Color(hex: "ff2b05")     // Kırmızı
+    // Ana Mor Renkler
+    static let purple100 = Color(hex: "E8E4FF")    // En Açık Mor
+    static let purple200 = Color(hex: "C4B8FF")    // Çok Açık Mor
+    static let purple300 = Color(hex: "A394FF")    // Açık Mor
+    static let purple400 = Color(hex: "8675FF")    // Ana Mor
+    static let purple500 = Color(hex: "6B5BFF")    // Koyu Mor
+    static let purple600 = Color(hex: "5A4BFF")    // Daha Koyu Mor
+
+    // Gradyan Mor Renkler
+    static let gradientPurple1 = Color(hex: "8675FF")
+    static let gradientPurple2 = Color(hex: "9B8AFF")
+    static let gradientPurple3 = Color(hex: "B09FFF")
     
-    // İkincil Renkler
-    static let purple300 = Color(hex: "8675ff")  // Açık Mor
-    static let purple200 = Color(hex: "baccfd")  // Çok Açık Mor
-    static let green300 = Color(hex: "16dbcc")   // Canlı Turkuaz
-    static let yellow300 = Color(hex: "ffbb38")  // Altın Sarı
-    static let pink300 = Color(hex: "f44771")    // Parlak Pembe
-    static let pink200 = Color(hex: "fd7289")    // Açık Pembe
-    static let navy400 = Color(hex: "353e6c")    // Lacivert
-    static let green200 = Color(hex: "dcfaf8")   // Açık Su Yeşili
-    static let green400 = Color(hex: "00ab67")   // Yoğun Yeşil
-    static let yellow200 = Color(hex: "fff5d9")  // Çok Açık Sarı
-    static let blue500 = Color(hex: "2BCCFF")    // Açık Mavi
-
-    // Gri Tonları
-    static let gray600 = Color(hex: "4B5563")    // Koyu Gri
-    static let gray400 = Color(hex: "9CA3AF")    // Orta Gri
-    static let gray300 = Color(hex: "D1D5DB")    // Açık Gri
-    static let gray100 = Color(hex: "F5F5F5")    // Çok Açık Gri
-
+    // Vurgu Renkler
+    static let accentPink = Color(hex: "FF6B9D")   // Pembe Vurgu
+    static let accentBlue = Color(hex: "4ECDC4")   // Turkuaz Vurgu
+    static let accentYellow = Color(hex: "FFD93D") // Sarı Vurgu
+    
+    // Nötr Renkler
+    static let gray900 = Color(hex: "1A1A2E")     // Çok Koyu
+    static let gray800 = Color(hex: "2D2B55")     // Koyu
+    static let gray700 = Color(hex: "4A4A6A")     // Orta Koyu
+    static let gray600 = Color(hex: "6B6B8A")     // Orta
+    static let gray500 = Color(hex: "8A8A9A")     // Orta Açık
+    static let gray400 = Color(hex: "B8B8C8")     // Açık
+    static let gray300 = Color(hex: "D1D1E0")     // Çok Açık
+    static let gray200 = Color(hex: "E8E8F0")     // En Açık
+    static let gray100 = Color(hex: "F8F8FF")     // Beyazımsı
+    
+    // Durum Renkleri
+    static let success = Color(hex: "4ECDC4")     // Turkuaz
+    static let warning = Color(hex: "FFD93D")     // Sarı
+    static let error = Color(hex: "FF6B6B")       // Kırmızı
+    static let info = Color(hex: "4A90E2")        // Mavi
+    
+    // Eski renkler (geriye uyumluluk için)
+    static let blue400 = Color(hex: "8675FF")     // Mor olarak güncellendi
+    static let yellow400 = Color(hex: "FFD93D")   // Güncellendi
+    static let pink400 = Color(hex: "FF6B9D")     // Güncellendi
+    static let red400 = Color(hex: "FF6B6B")      // Güncellendi
+    static let green400 = Color(hex: "4ECDC4")    // Güncellendi
+    static let navy400 = Color(hex: "2D2B55")     // Güncellendi
+    
+    // Arka plan renkleri
+    static let background = Color(hex: "F8F8FF")  // Ana arka plan
+    static let secondaryBackground = Color(hex: "FFFFFF") // İkincil arka plan
+    
+    // Ana renkler (geriye uyumluluk için)
+    static let primary = purple400    // Ana mor renk
+    static let secondary = gray600     // İkincil renk
 }
 
-
-// Ant Design stil bileşenleri
+// Mor ağırlıklı stil bileşenleri
 struct AntCard: ViewModifier {
     func body(content: Content) -> some View {
         content
             .padding(AntSpacing.md)
             .background(Color.white)
-            .cornerRadius(AntCornerRadius.md)
-            .shadow(radius: 2, y: 1)
+            .cornerRadius(AntCornerRadius.lg)
+            .shadow(color: Theme.purple200.opacity(0.1), radius: 8, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: AntCornerRadius.lg)
+                    .stroke(Theme.purple100, lineWidth: 1)
+            )
     }
 }
 
@@ -138,20 +165,21 @@ struct AntButtonStyleModifier: ButtonStyle {
             .padding(AntSpacing.md)
             .background(backgroundColor(for: style))
             .foregroundColor(foregroundColor(for: style))
-            .cornerRadius(AntCornerRadius.md)
+            .cornerRadius(AntCornerRadius.lg)
+            .shadow(color: Theme.purple200.opacity(0.2), radius: 4, x: 0, y: 2)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
     }
     
     private func backgroundColor(for style: AntButtonStyle) -> Color {
         switch style {
         case .primary:
-            return AntColors.primary
+            return Theme.purple400
         case .secondary:
             return Color.white
         case .warning:
-            return AntColors.warning
+            return Theme.warning
         case .error:
-            return AntColors.error
+            return Theme.error
         }
     }
     
@@ -160,7 +188,7 @@ struct AntButtonStyleModifier: ButtonStyle {
         case .primary:
             return .white
         case .secondary:
-            return AntColors.text
+            return Theme.purple600
         case .warning, .error:
             return .white
         }
@@ -172,10 +200,10 @@ struct AntTextFieldStyle: TextFieldStyle {
         configuration
             .padding(AntSpacing.md)
             .background(Color.white)
-            .cornerRadius(AntCornerRadius.md)
+            .cornerRadius(AntCornerRadius.lg)
             .overlay(
-                RoundedRectangle(cornerRadius: AntCornerRadius.md)
-                    .stroke(AntColors.primary.opacity(0.2), lineWidth: 1)
+                RoundedRectangle(cornerRadius: AntCornerRadius.lg)
+                    .stroke(Theme.purple200, lineWidth: 1.5)
             )
     }
 }
@@ -184,9 +212,9 @@ struct AntLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: AntSpacing.xs) {
             configuration.icon
-                .foregroundColor(AntColors.primary)
+                .foregroundColor(Theme.purple400)
             configuration.title
-                .foregroundColor(AntColors.text)
+                .foregroundColor(Theme.gray800)
         }
     }
 }
@@ -205,8 +233,30 @@ extension View {
         self
             .padding(.horizontal, AntSpacing.md)
             .padding(.vertical, AntSpacing.xs)
-            .background(isSelected ? AntColors.primary : Color.white)
-            .foregroundColor(isSelected ? .white : AntColors.text)
-            .cornerRadius(AntCornerRadius.md)
+            .background(isSelected ? Theme.purple400 : Color.white)
+            .foregroundColor(isSelected ? .white : Theme.purple600)
+            .cornerRadius(AntCornerRadius.lg)
+            .shadow(color: Theme.purple200.opacity(0.2), radius: 2, x: 0, y: 1)
     }
+    
+    // Mor gradyan arka plan
+    func purpleGradientBackground() -> some View {
+        self.background(
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Theme.gradientPurple1,
+                    Theme.gradientPurple2,
+                    Theme.gradientPurple3
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+    
+    // Mor gölge efekti
+    func purpleShadow() -> some View {
+        self.shadow(color: Theme.purple200.opacity(0.3), radius: 8, x: 0, y: 4)
+    }
+    
 } 

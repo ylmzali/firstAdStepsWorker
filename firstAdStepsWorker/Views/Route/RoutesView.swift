@@ -1,358 +1,192 @@
 import SwiftUI
 
 struct RoutesView: View {
-    @State private var showNewRoute = false
-    @StateObject private var viewModel = RouteViewModel(
-        routes: [],
-        formVal: Route(
-            id: UUID().uuidString,
-            userId: SessionManager.shared.currentUser?.id ?? "",
-            title: "",
-            description: "",
-            status: .request_received,
-            assignedDate: nil,
-            completion: 0,
-            createdAt: ISO8601DateFormatter().string(from: Date())
-        )
-    )
+    @StateObject private var viewModel = RouteViewModel(routes: [])
     @EnvironmentObject private var navigationManager: NavigationManager
-    @State private var selectedRoute: Route?
-    @State private var viewMode: ViewMode = .list // Varsayılan olarak gruplanmış görünüm
-
-    // Görünüm modları
-    enum ViewMode: String, CaseIterable {
-        case list = "Liste"
-        case grouped = "Gruplanmış"
-        
-        var icon: String {
-            switch self {
-            case .list: return "list.bullet"
-            case .grouped: return "folder"
-            }
-        }
-    }
-
-    // Rotaları kategorilere ayıran computed property'ler
-    private var activeRoutes: [Route] {
-        viewModel.routes.filter { $0.status == .active }
-    }
+    @EnvironmentObject private var sessionManager: SessionManager
+    @StateObject private var locationManager = LocationManager.shared
+    @State private var selectedRoute: Assignment?
+    // Filtre ve arama ile ilgili state'ler kaldırıldı
     
-    private var pendingRoutes: [Route] {
-        viewModel.routes.filter { 
-            $0.status == .request_received || 
-            $0.status == .plan_ready || 
-            $0.status == .payment_pending ||
-            $0.status == .plan_rejected
-        }
-    }
-    
-    private var completedRoutes: [Route] {
-        viewModel.routes.filter { $0.status == .completed }
-    }
-    
-    private var cancelledRoutes: [Route] {
-        viewModel.routes.filter { $0.status == .cancelled }
-    }
-    
-    private var paymentCompletedRoutes: [Route] {
-        viewModel.routes.filter { $0.status == .payment_completed }
-    }
-    
-    private var sharedRoutes: [Route] {
-        viewModel.routes.filter { $0.shareWithEmployees }
-    }
-    
-    private var myRoutes: [Route] {
-        viewModel.routes.filter { !$0.shareWithEmployees }
-    }
-
     var body: some View {
         NavigationView {
-            ZStack {
-                Color.black.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-
-                        RouteViewHeaderStats(viewModel: viewModel)
-
-                        // Görünüm Seçenekleri Butonları
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack(spacing: 12) {
-                                ForEach(ViewMode.allCases, id: \.self) { mode in
-                                    Button(action: { viewMode = mode }) {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: mode.icon)
-                                                .font(.system(size: 16))
-                                            Text(mode.rawValue)
-                                                .font(.system(size: 14, weight: .medium))
-                                        }
-                                        .foregroundColor(viewMode == mode ? .black : .white)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 10)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(viewMode == mode ? Color.white : Color.white.opacity(0.1))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                                )
-                                        )
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                                Spacer()
-                            }
-                            .padding()
-
-                        }
-
-                        if viewModel.routes.isEmpty {
-                            emptyStateView
-                        } else {
-                            if viewMode == .list {
-                                listViewContent
-                            } else {
-                                routeListContent
-                            }
+            routesTabView
+                .navigationTitle("Rotalarım")
+                .navigationBarTitleDisplayMode(.large)
+                .toolbarColorScheme(.light, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbarBackground(Color.white, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: refreshRoutes) {
+                            Image(systemName: "arrow.clockwise")
                         }
                     }
                 }
-                .refreshable {
-                    viewModel.loadRoutes()
+                .fullScreenCover(item: $selectedRoute) { route in
+                    RouteTrackingView(route: route)
                 }
-                .scrollIndicators(.hidden)
-                .tint(.white)
-                .overlay(loadingOverlay)
-            }
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    newRouteButton
+        }
+    }
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+                .progressViewStyle(CircularProgressViewStyle(tint: Theme.purple400))
+            Text("Rotalar Yükleniyor...")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(Theme.gray800)
+            Text("Bekleyen atamalarınız kontrol ediliyor")
+                .font(.body)
+                .foregroundColor(Theme.gray600)
+                .multilineTextAlignment(.center)
+            Button(action: cancelLoading) {
+                HStack(spacing: 8) {
+                    Image(systemName: "xmark.circle")
+                        .font(.system(size: 16, weight: .medium))
+                    Text("İptal Et")
+                        .fontWeight(.medium)
                 }
-            }
-            .navigationTitle("Reklamlar")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarBackground(Color.black, for: .navigationBar)
-            .sheet(isPresented: $showNewRoute, onDismiss: {
-                viewModel.resetForm()
-                viewModel.loadRoutes()
-            }) {
-                // NewRouteSheet(viewModel: viewModel)
-                NewRouteSheet(onRouteCreated: {
-                    viewModel.loadRoutes()
-                })
-            }
-            .sheet(item: $selectedRoute) { route in
-                RouteDetailView(route: route)
-            }
-            .onAppear {
-                viewModel.loadRoutes()
-            }
-            .overlay {
-                if SessionManager.shared.isLoading {
-                    LoadingView()
-                }
+                .foregroundColor(Theme.gray600)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Theme.gray200)
+                .cornerRadius(8)
             }
         }
+        .padding()
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 12) {
             Image(systemName: "map")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .foregroundColor(.white.opacity(0.3))
-                .padding(.bottom, 8)
-            
-            Text("Henüz bir reklam siparişiniz yok.")
-                .font(.title3).bold()
-                .foregroundColor(.white.opacity(0.7))
-            
-            Text("Yeni bir reklam siparişi oluşturmak için sağ üstteki  Yeni Reklam butonunu kullanabilirsiniz.")
+                .font(.system(size: 60))
+                .foregroundColor(Theme.gray400)
+            Text("Bekleyen Atama Yok")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(Theme.gray800)
+            Text("Şu anda size atanmış bekleyen rota bulunmuyor. Yeni atamalar geldiğinde burada görünecek.")
+                .font(.body)
+                .foregroundColor(Theme.gray600)
                 .multilineTextAlignment(.center)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.bottom, 12)
-            
-            Button(action: { showNewRoute = true }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus.circle.fill")
-                    Text("Yeni Reklam")
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .font(.headline)
-                .foregroundColor(.white)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                )
-            }
-            
-            Button(action: { viewModel.loadRoutes() }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.forward.circle.fill")
+                .padding(.horizontal)
+            Button(action: refreshRoutes) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 16, weight: .medium))
                     Text("Yenile")
+                        .fontWeight(.medium)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
-                .font(.headline)
                 .foregroundColor(.white)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                        )
-                )
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Theme.purple400)
+                .cornerRadius(8)
             }
         }
-        .frame(maxWidth: .infinity)
-        .frame(minHeight: 500)
-        .padding(.top, 50)
+        .padding()
+        .padding(.bottom,100)
     }
     
-    private var routeListContent: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            if !activeRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "Aktif Rotalar",
-                    icon: "play.circle.fill",
-                    color: .green,
-                    routes: activeRoutes,
-                    selectedRoute: $selectedRoute
-                )
-            }
-            
-            if !pendingRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "Bekleyen Rotalar",
-                    icon: "clock.circle.fill",
-                    color: .orange,
-                    routes: pendingRoutes,
-                    selectedRoute: $selectedRoute
-                )
-            }
-            
-            if !sharedRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "Şirket Çalışanlarıyla Paylaşılan",
-                    icon: "person.2.circle.fill",
-                    color: .blue,
-                    routes: sharedRoutes,
-                    selectedRoute: $selectedRoute
-                )
-            }
-            
-            if !completedRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "Tamamlanan Rotalar",
-                    icon: "checkmark.circle.fill",
-                    color: .gray,
-                    routes: completedRoutes,
-                    selectedRoute: $selectedRoute
-                )
-            }
-            
-            if !paymentCompletedRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "Ödeme Tamamlanan Rotalar",
-                    icon: "creditcard.circle.fill",
-                    color: .purple,
-                    routes: paymentCompletedRoutes,
-                    selectedRoute: $selectedRoute
-                )
-            }
-            
-            if !cancelledRoutes.isEmpty {
-                RouteCategorySection(
-                    title: "İptal Edilen Rotalar",
-                    icon: "xmark.circle.fill",
-                    color: .red,
-                    routes: cancelledRoutes,
-                    selectedRoute: $selectedRoute
-                )
+    private var routesTabView: some View {
+        ZStack {
+            Theme.gray100.ignoresSafeArea()
+            if viewModel.isLoading {
+                loadingView
+            } else if viewModel.routes.isEmpty {
+                emptyStateView
+            } else {
+                routeListView
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 30)
-        .padding(.bottom, 100)
-    }
-    
-    private var loadingOverlay: some View {
-        Group {
-            if SessionManager.shared.isLoading {
-                VStack {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.2)
-                            .padding()
-                            .background(
-                                Circle()
-                                    .fill(Color.black.opacity(0.7))
-                                    .frame(width: 40, height: 40)
-                            )
-                        Spacer()
-                    }
-                }
-                .padding(.top, 20)
-                Spacer()
-            }
+        .refreshable {
+            refreshRoutes()
+        }
+        .onAppear {
+            loadRoutes()
         }
     }
     
-    private var newRouteButton: some View {
-        Button(action: { showNewRoute = true }) {
-            HStack(spacing: 6) {
-                Image(systemName: "plus.circle.fill")
-                Text("Yeni Oluştur")
-            }
-            .foregroundColor(.white)
-        }
-    }
-    
-    private var listViewContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Başlık
-            HStack {
-                Text("Tüm Reklamlar")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Text("\(viewModel.routes.count) reklam")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white.opacity(0.6))
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 20)
-            
-            // Liste
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.routes.sorted { $0.createdAt > $1.createdAt }) { route in
-                    RouteRowView(route: route)
-                        .onTapGesture {
-                            selectedRoute = route
+    private var routeListView: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Bugünkü Rotalar
+                let todayString = DateFormatter.shortDateString(from: Date())
+                let todayRoutes = myRoutes.filter { $0.scheduleDate == todayString }
+                let waitingRoutes = myRoutes.filter { $0.scheduleDate != todayString }
+
+                if !todayRoutes.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Bugünkü Rotalar")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(Theme.gray800)
+                            .padding(.leading, 16)
+                        LazyVStack(spacing: 12) {
+                            ForEach(todayRoutes) { route in
+                                RouteCard(route: route) {
+                                    selectedRoute = route
+                                }
+                            }
                         }
+                        .padding(.horizontal, 8)
+                    }
+                    .padding(.top, 30)
+                }
+
+                if !waitingRoutes.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Bekleyen Rotalar")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .foregroundColor(Theme.gray800)
+                            .padding(.leading, 16)
+                        LazyVStack(spacing: 12) {
+                            ForEach(waitingRoutes) { route in
+                                RouteCard(route: route) {
+                                    selectedRoute = route
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                    }
+                    .padding(.top, 30)
+                }
+                if todayRoutes.isEmpty && waitingRoutes.isEmpty {
+                    emptyStateView
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 100)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
         }
+    }
+    
+    private func loadRoutes() {
+        viewModel.loadRoutes()
+    }
+    
+    private func refreshRoutes() {
+        loadRoutes()
+    }
+    
+    private func cancelLoading() {
+        viewModel.isLoading = false
+        SessionManager.shared.isLoading = false
+    }
+
+    // Only show accepted assignments (rotalarım)
+    private var myRoutes: [Assignment] {
+        viewModel.routes.filter { $0.assignmentStatus == .accepted }
     }
 }
 
 #Preview {
     RoutesView()
-}
+        .environmentObject(NavigationManager.shared)
+        .environmentObject(SessionManager.shared)
+        .environmentObject(AppStateManager.shared)
+        .environmentObject(LocationManager.shared)
+} 
