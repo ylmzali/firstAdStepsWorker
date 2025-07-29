@@ -81,12 +81,7 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
         print("🔔 NotificationManager: Notification işleniyor...")
         print("📋 UserInfo: \(userInfo)")
         
-        // Deep link kontrolü
-        if let deepLink = userInfo["deepLink"] as? String {
-            print("🔗 Deep link tespit edildi: \(deepLink)")
-            handleDeepLink(deepLink)
-            return
-        }
+
         
         // Notification tipine göre işlem yap
         if let notificationType = userInfo["notificationType"] as? String {
@@ -175,19 +170,7 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
         }
     }
     
-    private func handleDeepLink(_ deepLink: String) {
-        print("🔗 Deep link işleniyor: \(deepLink)")
-        
-        // URL formatı: firstadsteps://route/123
-        if let url = URL(string: deepLink) {
-            let components = url.pathComponents
-            if components.count >= 2 && components[1] == "route" {
-                let routeId = components[2]
-                print("🔗 Route ID çıkarıldı: \(routeId)")
-                navigateToRoute(routeId)
-            }
-        }
-    }
+
     
     // MARK: - Remote Notifications (Backend'den Gelen Push Notifications)
     
@@ -322,7 +305,7 @@ class NotificationManager: NSObject, ObservableObject, UNUserNotificationCenterD
     // MARK: - Deep Link Navigation
     
     private func navigateToRoute(_ routeId: String) {
-        print("🔗 Route'a yönlendiriliyor: \(routeId)")
+        print("🔗 Schedule'a yönlendiriliyor: \(routeId)")
         
         // Ana view'a route ID'yi gönder
         NotificationCenter.default.post(
@@ -353,8 +336,7 @@ extension Notification.Name {
     static let readyToStartReceived = Notification.Name("readyToStartReceived")
     static let routeNotificationReceived = Notification.Name("routeNotificationReceived")
     
-    // Deep Link ve Navigation
-    static let deepLinkToRoute = Notification.Name("deepLinkToRoute")
+    // Navigation
     static let navigateToRoute = Notification.Name("navigateToRoute")
     static let navigateToTab = Notification.Name("navigateToTab")
     

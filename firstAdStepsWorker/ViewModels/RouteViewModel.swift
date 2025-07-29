@@ -18,6 +18,7 @@ class RouteViewModel: ObservableObject {
 
     init(routes: [Assignment] = []) {
         self.routes = routes
+        self.assignments = assignments
         
         // Demo rotalar ekle (sadece preview için)
         #if DEBUG
@@ -31,6 +32,7 @@ class RouteViewModel: ObservableObject {
         return [
             Assignment(
                 id: "1",
+                routeId: "27",
                 planId: "1",
                 scheduleDate: "2025-07-24",
                 startTime: "16:00:00",
@@ -45,7 +47,8 @@ class RouteViewModel: ObservableObject {
                 radiusMeters: "1000",
                 mapSnapshotUrl: nil,
                 mapSnapshotCreatedAt: nil,
-                status: "draft",
+                status: "penging",
+                workStatus: "penging",
                 createdBy: "1",
                 createdAt: "2025-07-20 23:02:51",
                 assignmentScheduleId: "49",
@@ -54,11 +57,13 @@ class RouteViewModel: ObservableObject {
                 assignmentOfferDescription: "Kadıköy merkez ve çevresinde mobil ekran reklamları. Toplam 5 nokta, yaklaşık 3 saat sürecek.",
                 assignmentOfferBudget: "400.00",
                 assignmentStatus: .pending,
+                assignmentWorkStatus: .pending,
                 assignmentId: "31",
                 assignmentCreatedAt: "2025-07-20 23:03:14"
             ),
             Assignment(
                 id: "2",
+                routeId: "27",
                 planId: "2",
                 scheduleDate: "2025-07-25",
                 startTime: "10:00:00",
@@ -73,7 +78,8 @@ class RouteViewModel: ObservableObject {
                 radiusMeters: "0",
                 mapSnapshotUrl: nil,
                 mapSnapshotCreatedAt: nil,
-                status: "draft",
+                status: "pending",
+                workStatus: "pending",
                 createdBy: "1",
                 createdAt: "2025-07-21 10:00:00",
                 assignmentScheduleId: "50",
@@ -82,7 +88,39 @@ class RouteViewModel: ObservableObject {
                 assignmentOfferDescription: "Beşiktaş semtinde sabit ekran reklamları. Barbaros Bulvarı ve çevresi. 4 nokta, 2.5 saat.",
                 assignmentOfferBudget: "350.00",
                 assignmentStatus: .accepted,
+                assignmentWorkStatus: .pending,
                 assignmentId: "32",
+                assignmentCreatedAt: "2025-07-21 10:05:00"
+            ),
+            Assignment(
+                id: "3",
+                routeId: "27",
+                planId: "3",
+                scheduleDate: "2025-07-26",
+                startTime: "20:00:00",
+                endTime: "24:00:00",
+                routeType: "area_route",
+                startLat: "0.00000000",
+                startLng: "0.00000000",
+                endLat: "0.00000000",
+                endLng: "0.00000000",
+                centerLat: "41.02296500",
+                centerLng: "29.02028500",
+                radiusMeters: "1500",
+                mapSnapshotUrl: nil,
+                mapSnapshotCreatedAt: nil,
+                status: "pending",
+                workStatus: "pending",
+                createdBy: "1",
+                createdAt: "2025-07-21 10:00:00",
+                assignmentScheduleId: "51",
+                assignmentScreenId: "3",
+                assignmentEmployeeId: "9",
+                assignmentOfferDescription: "Gece reklamları. Şişli merkez ve çevresinde mobil ekran reklamları. 6 nokta, 4 saat sürecek.",
+                assignmentOfferBudget: "600.00",
+                assignmentStatus: .accepted,
+                assignmentWorkStatus: .pending,
+                assignmentId: "33",
                 assignmentCreatedAt: "2025-07-21 10:05:00"
             )
             // ... başka demo assignmentlar ekleyebilirsin
@@ -125,7 +163,7 @@ class RouteViewModel: ObservableObject {
             }
         }
     }
-
+    
     // Sadece bekleyen assignment'ları döndürür
     var pendingAssignments: [Assignment] {
         assignments.filter { $0.assignmentStatus == .pending }
@@ -161,7 +199,7 @@ class RouteViewModel: ObservableObject {
         return true
     }
      */
-
+    
     // MARK: - Assignment Action Functions
     func acceptAssignment(
         assignmentId: String,

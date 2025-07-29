@@ -84,9 +84,9 @@ struct OTPView: View {
                                 countryCode: countryCode,
                                 otpRequestId: data.otpRequestId
                             )
-                        case .failure(let error):
-                            print("❌ OTP request error: \(error.localizedDescription)")
+                        case .failure(_):
                             // Error AuthViewModel'de zaten set ediliyor
+                            break
                         }
                     }
                 }
@@ -102,17 +102,14 @@ struct OTPView: View {
                 ) { result in
                     switch result {
                     case .success(let data):
-                        if data.isUserExist == true, let user = data.user {
-                            print("✅ User verified successfully")
-                            print("📱 User data: \(user)")
+                        if data.isUserExist == true, let _ = data.user {
                             navigationManager.goToHome()
                         } else {
-                            print("❌ User verification failed")
                             navigationManager.goToRegistration(phoneNumber: phoneNumber, countryCode: countryCode)
                         }
-                    case .failure(let error):
-                        print("❌ OTP verification error: \(error.localizedDescription)")
+                    case .failure(_):
                         // Error AuthViewModel'de zaten set ediliyor
+                        break
                     }
                 }
             }) {

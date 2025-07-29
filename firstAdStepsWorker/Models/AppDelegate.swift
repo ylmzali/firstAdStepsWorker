@@ -116,15 +116,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Detaylı hata analizi
         let nsError = error as NSError
-        print("🔍 Hata Domain: \(nsError.domain)")
-        print("🔍 Hata Code: \(nsError.code)")
-        print("🔍 Hata Description: \(nsError.localizedDescription)")
-        
-        if let underlyingError = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
-            print("🔍 Alt Hata Domain: \(underlyingError.domain)")
-            print("🔍 Alt Hata Code: \(underlyingError.code)")
-            print("🔍 Alt Hata Description: \(underlyingError.localizedDescription)")
-        }
         
         // Yaygın hata kodları ve çözümleri
         switch nsError.code {
@@ -188,90 +179,40 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     // MARK: - Location Permission Management
     
     private func checkAndRequestLocationPermissions() {
-        print("📍 AppDelegate: Konum izinleri kontrol ediliyor...")
-        
         let locationManager = CLLocationManager()
         let status = locationManager.authorizationStatus
         
-        print("📍 AppDelegate: Mevcut konum izni durumu: \(status.rawValue)")
-        
         switch status {
         case .notDetermined:
-            print("📍 AppDelegate: Konum izni henüz belirlenmemiş, izin isteniyor...")
             requestLocationPermission()
             
         case .denied, .restricted:
-            print("📍 AppDelegate: Konum izni reddedilmiş veya kısıtlanmış")
             // Kullanıcıya bilgi verilebilir ama zorla istenmez
+            break
             
         case .authorizedWhenInUse:
-            print("📍 AppDelegate: WhenInUse izni var, Always izni isteniyor...")
             requestLocationPermission()
             
         case .authorizedAlways:
-            print("📍 AppDelegate: Konum izni zaten verilmiş (Always)")
+            // Konum izni zaten verilmiş
+            break
             
         @unknown default:
-            print("📍 AppDelegate: Bilinmeyen konum izni durumu")
+            break
         }
     }
     
     private func requestLocationPermission() {
-        print("📍 AppDelegate: Konum izni isteniyor...")
-        
         let locationManager = CLLocationManager()
         
         // Önce WhenInUse izni iste
-        print("📍 AppDelegate: WhenInUse izni isteniyor...")
         locationManager.requestWhenInUseAuthorization()
         
         // Kısa bir süre sonra Always izni iste
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            print("📍 AppDelegate: Always izni isteniyor...")
             locationManager.requestAlwaysAuthorization()
         }
-        
-        print("📍 AppDelegate: Konum izni istekleri gönderildi")
     }
     
-    // MARK: - Deep Link Handling
-    
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        print("🔗 AppDelegate: Deep link alındı: \(url)")
-        
-        // URL'den route ID'yi çıkar
-        if let routeId = extractRouteId(from: url) {
-            handleDeepLink(routeId: routeId)
-        }
-        
-        return true
-    }
-    
-    private func extractRouteId(from url: URL) -> String? {
-        print("🔗 AppDelegate: URL analiz ediliyor: \(url)")
-        
-        // URL formatı: firstadsteps://route/123
-        let components = url.pathComponents
-        print("🔗 URL Components: \(components)")
-        
-        if components.count >= 2 && components[1] == "route" {
-            let routeId = components[2]
-            print("🔗 AppDelegate: Route ID çıkarıldı: \(routeId)")
-            return routeId
-        }
-        
-        print("🔗 AppDelegate: Route ID bulunamadı")
-        return nil
-    }
-    
-    private func handleDeepLink(routeId: String) {
-        print("🔗 AppDelegate: Route ID: \(routeId) için deep link işleniyor")
-        
-        // NotificationCenter ile route'a yönlendir
-        NotificationCenter.default.post(
-            name: .deepLinkToRoute,
-            object: nil,
-            userInfo: ["routeId": routeId]
-        )
-    }
+
 } 

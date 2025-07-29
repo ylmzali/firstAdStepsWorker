@@ -113,7 +113,7 @@ struct NotificationListView: View {
     }
     
     private func navigateToRoute(_ routeId: String) {
-        print("🔗 Route'a yönlendiriliyor: \(routeId)")
+        print("🔗 Schedule'a yönlendiriliyor: \(routeId)")
         
         // Ana view'a route ID'yi gönder
         NotificationCenter.default.post(

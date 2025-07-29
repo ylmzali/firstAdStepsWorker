@@ -15,7 +15,7 @@ struct AssignmentListView: View {
                         routeViewModel.loadAssignments()
                     }
                 } else if routeViewModel.pendingAssignments.isEmpty {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 8) {
                         Image(systemName: "doc.text")
                             .font(.system(size: 48))
                             .foregroundColor(Theme.gray400)
@@ -67,6 +67,9 @@ struct AssignmentListView: View {
             }
         }
         .onAppear {
+            routeViewModel.loadAssignments()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WorkStatusUpdated"))) { _ in
             routeViewModel.loadAssignments()
         }
     }

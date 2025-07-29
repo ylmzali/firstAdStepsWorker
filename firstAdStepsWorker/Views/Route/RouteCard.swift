@@ -12,44 +12,72 @@ struct RouteCard: View {
     let route: Assignment
     let onTap: () -> Void
     @Namespace private var animation
+    @State private var isAnimating = false
+    @State private var currentWorkStatus: String
+    
+    init(route: Assignment, onTap: @escaping () -> Void) {
+        self.route = route
+        self.onTap = onTap
+        self._currentWorkStatus = State(initialValue: route.workStatus)
+    }
     
     var body: some View {
         Button(action: onTap) {
             ZStack(alignment: .topTrailing) {
+                /*
                 AssignmentStatusBadge(status: route.assignmentStatus)
                     .padding(.top, 2)
                     .offset(x: 12,y: -25)
+                 */
+                
                 VStack(alignment: .leading, spacing: 14) {
+
+                    // Work Status Indicator
+                    // if currentWorkStatus == "working" {
+                    HStack(spacing: 4) {
+                        if currentWorkStatus == "working" {
+                            Circle()
+                                .fill(route.assignmentWorkStatus.statusColor)
+                                .frame(width: 8, height: 8)
+                                .scaleEffect(isAnimating ? 1.6 : 0.5)
+                                .animation(
+                                    Animation.easeInOut(duration: 1.0)
+                                        .repeatForever(autoreverses: true),
+                                    value: isAnimating
+                                )
+                        } else {
+                            Image(systemName: route.assignmentWorkStatus.icon)
+                                .font(.system(size: 18))
+                                .foregroundColor(route.assignmentWorkStatus.statusColor)
+                                .fontWeight(.medium)
+                        }
+                        Text(route.assignmentWorkStatus.displayName)
+                            .font(.caption)
+                            .foregroundColor(route.assignmentWorkStatus.statusColor)
+                            .fontWeight(.medium)
+
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(route.assignmentWorkStatus.statusColor.opacity(0.1))
+                    .cornerRadius(12)
+                    // .offset(x: 10, y: -18)
+                    .onAppear {
+                        isAnimating = true
+                    }
+                    // }
+                
                     HStack(spacing: 16) {
                         VStack(alignment: .leading, spacing: 6) {
-                            /*
-                            Text(route.formattedTurkishDateTime)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .lineLimit(3)
-                             */
                             Text(route.assignmentOfferDescription ?? "Görev")
                                 .font(.system(size: 16, weight: .light))
                                 .lineLimit(3)
-                            /*
-                            AssignmentStatusBadge(status: route.assignmentStatus)
-                                .padding(.top, 2)
-                             */
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.system(size: 14, weight: .medium))
                     }
                     HStack(spacing: 6) {
-                        /*
-                         Label(route.formattedTurkishShortDate, systemImage: "calendar")
-                         .font(.caption)
-                         .foregroundColor(.secondary)
-                         Label("Bütçe: ₺" + route.assignmentOfferBudget, systemImage: "chart.line.uptrend.xyaxis")
-                         .font(.caption)
-                         .foregroundColor(.secondary)
-                         */
-                        
                         Label(route.formattedTurkishDate, systemImage: "calendar")
                             .frame(maxWidth: 100)
                             .font(.caption)
@@ -57,18 +85,19 @@ struct RouteCard: View {
                             .background(Theme.gray100)
                             .foregroundColor(Theme.purple600)
                             .cornerRadius(6)
-                        Label("Başlangıç\n" + route.startTime.prefix(5), systemImage: "clock")
+                        Label("Başlangıç\n" + route.formattedStartTime, systemImage: "clock")
                             .font(.caption)
                             .padding(8)
                             .background(Theme.gray100)
                             .foregroundColor(Theme.purple600)
                             .cornerRadius(6)
-                        Label("Bitiş\n" + route.endTime.prefix(5), systemImage: "clock")
+                        Label("Bitiş\n" + route.formattedEndTime, systemImage: "clock")
                             .font(.caption)
                             .padding(8)
                             .background(Theme.gray100)
                             .foregroundColor(Theme.purple600)
                             .cornerRadius(6)
+                        Spacer()
                     }
                     .frame(maxWidth: .infinity)
                 }
@@ -85,6 +114,36 @@ struct RouteCard: View {
             .padding(.horizontal, 2)
         }
         .buttonStyle(PlainButtonStyle())
+        .onAppear {
+            setupWorkStatusObserver()
+        }
+        .onDisappear {
+            removeWorkStatusObserver()
+        }
+    }
+    
+    private func setupWorkStatusObserver() {
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("WorkStatusUpdated"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let userInfo = notification.userInfo,
+               let scheduleId = userInfo["schedule_id"] as? String,
+               let workStatus = userInfo["work_status"] as? String,
+               scheduleId == route.id {
+                
+                
+                DispatchQueue.main.async {
+                    self.currentWorkStatus = workStatus
+                    print("✅ [RouteCard] currentWorkStatus güncellendi: \(self.currentWorkStatus)")
+                }
+            }
+        }
+    }
+    
+    private func removeWorkStatusObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("WorkStatusUpdated"), object: nil)
     }
 }
 
@@ -100,14 +159,6 @@ struct RouteCard: View {
     .background(Color(.systemGray6))
 }
 
-extension DateFormatter {
-    static func dateFromYMD(_ ymdString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "tr_TR")
-        return formatter.date(from: ymdString)
-    }
-}
 extension String {
     var toYMDDate: Date? {
         return DateFormatter.dateFromYMD(self)

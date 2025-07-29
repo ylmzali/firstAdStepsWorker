@@ -4,6 +4,7 @@ import SwiftUI
 // Assignment Model - Worker'a atanan görevler
 struct Assignment: Codable, Identifiable {
     let id: String
+    let routeId: String
     let planId: String
     let scheduleDate: String
     let startTime: String
@@ -19,6 +20,7 @@ struct Assignment: Codable, Identifiable {
     let mapSnapshotUrl: String?
     let mapSnapshotCreatedAt: String?
     var status: String
+    var workStatus: String
     let createdBy: String
     let createdAt: String
     let assignmentScheduleId: String
@@ -27,11 +29,13 @@ struct Assignment: Codable, Identifiable {
     let assignmentOfferDescription: String?
     let assignmentOfferBudget: String
     let assignmentStatus: AssignmentStatus
+    let assignmentWorkStatus: AssignmentWorkStatus
     let assignmentId: String
     let assignmentCreatedAt: String
     
     enum CodingKeys: String, CodingKey {
         case id
+        case routeId
         case planId
         case scheduleDate
         case startTime
@@ -47,6 +51,7 @@ struct Assignment: Codable, Identifiable {
         case mapSnapshotUrl
         case mapSnapshotCreatedAt
         case status
+        case workStatus
         case createdBy
         case createdAt
         case assignmentScheduleId
@@ -55,12 +60,14 @@ struct Assignment: Codable, Identifiable {
         case assignmentOfferDescription
         case assignmentOfferBudget
         case assignmentStatus
+        case assignmentWorkStatus
         case assignmentId
         case assignmentCreatedAt
     }
     
     // Normal initializer
     init(id: String,
+         routeId: String,
          planId: String,
          scheduleDate: String,
          startTime: String,
@@ -76,6 +83,7 @@ struct Assignment: Codable, Identifiable {
          mapSnapshotUrl: String?,
          mapSnapshotCreatedAt: String?,
          status: String,
+         workStatus: String,
          createdBy: String,
          createdAt: String,
          assignmentScheduleId: String,
@@ -84,9 +92,11 @@ struct Assignment: Codable, Identifiable {
          assignmentOfferDescription: String?,
          assignmentOfferBudget: String,
          assignmentStatus: AssignmentStatus,
+         assignmentWorkStatus: AssignmentWorkStatus,
          assignmentId: String,
          assignmentCreatedAt: String) {
         self.id = id
+        self.routeId = routeId
         self.planId = planId
         self.scheduleDate = scheduleDate
         self.startTime = startTime
@@ -102,6 +112,7 @@ struct Assignment: Codable, Identifiable {
         self.mapSnapshotUrl = mapSnapshotUrl
         self.mapSnapshotCreatedAt = mapSnapshotCreatedAt
         self.status = status
+        self.workStatus = workStatus
         self.createdBy = createdBy
         self.createdAt = createdAt
         self.assignmentScheduleId = assignmentScheduleId
@@ -110,6 +121,7 @@ struct Assignment: Codable, Identifiable {
         self.assignmentOfferDescription = assignmentOfferDescription
         self.assignmentOfferBudget = assignmentOfferBudget
         self.assignmentStatus = assignmentStatus
+        self.assignmentWorkStatus = assignmentWorkStatus
         self.assignmentId = assignmentId
         self.assignmentCreatedAt = assignmentCreatedAt
     }
@@ -119,6 +131,7 @@ struct Assignment: Codable, Identifiable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         id = try container.decode(String.self, forKey: .id)
+        routeId = try container.decode(String.self, forKey: .routeId)
         planId = try container.decode(String.self, forKey: .planId)
         scheduleDate = try container.decode(String.self, forKey: .scheduleDate)
         startTime = try container.decode(String.self, forKey: .startTime)
@@ -134,6 +147,7 @@ struct Assignment: Codable, Identifiable {
         mapSnapshotUrl = try container.decodeIfPresent(String.self, forKey: .mapSnapshotUrl)
         mapSnapshotCreatedAt = try container.decodeIfPresent(String.self, forKey: .mapSnapshotCreatedAt)
         status = try container.decode(String.self, forKey: .status)
+        workStatus = try container.decode(String.self, forKey: .workStatus)
         createdBy = try container.decode(String.self, forKey: .createdBy)
         createdAt = try container.decode(String.self, forKey: .createdAt)
         assignmentScheduleId = try container.decode(String.self, forKey: .assignmentScheduleId)
@@ -142,6 +156,7 @@ struct Assignment: Codable, Identifiable {
         assignmentOfferDescription = try container.decodeIfPresent(String.self, forKey: .assignmentOfferDescription)
         assignmentOfferBudget = try container.decode(String.self, forKey: .assignmentOfferBudget)
         assignmentStatus = try container.decode(AssignmentStatus.self, forKey: .assignmentStatus)
+        assignmentWorkStatus = try container.decode(AssignmentWorkStatus.self, forKey: .assignmentWorkStatus)
         assignmentId = try container.decode(String.self, forKey: .assignmentId)
         assignmentCreatedAt = try container.decode(String.self, forKey: .assignmentCreatedAt)
     }
@@ -149,10 +164,11 @@ struct Assignment: Codable, Identifiable {
     // Preview için test verisi
     static let preview = Assignment(
         id: "44",
+        routeId: "27",
         planId: "23",
-        scheduleDate: "2025-07-23",
-        startTime: "16:00:00",
-        endTime: "20:00:00",
+        scheduleDate: "2025-07-27",
+        startTime: "08:00:00",
+        endTime: "24:00:00",
         routeType: "fixed_route",
         startLat: "41.04045300",
         startLng: "28.97888800",
@@ -163,7 +179,8 @@ struct Assignment: Codable, Identifiable {
         radiusMeters: "0",
         mapSnapshotUrl: "/assets/uploads/map_snapshots/schedule_44_1752669278.png",
         mapSnapshotCreatedAt: "2025-07-16 15:34:38",
-        status: "draft",
+        status: "pending",
+        workStatus: "pending",
         createdBy: "1",
         createdAt: "2025-07-16 15:33:54",
         assignmentScheduleId: "44",
@@ -171,7 +188,8 @@ struct Assignment: Codable, Identifiable {
         assignmentEmployeeId: "7",
         assignmentOfferDescription: "1 gün 4 saatlik bir program. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.",
         assignmentOfferBudget: "350.00",
-        assignmentStatus: .pending,
+        assignmentStatus: .accepted,
+        assignmentWorkStatus: .working,
         assignmentId: "26",
         assignmentCreatedAt: "2025-07-23 15:35:51"
     )
@@ -188,12 +206,18 @@ extension Assignment {
     }
     /// Başlangıç saati (örn: 16:00)
     var formattedStartTime: String {
-        String(startTime.prefix(5))
+        DateFormatter.formatTimeString(startTime)
     }
     /// Bitiş saati (örn: 21:00)
     var formattedEndTime: String {
-        String(endTime.prefix(5))
+        let timeString = DateFormatter.formatTimeString(endTime)
+        // Eğer 24:00 ise, 23:59 olarak göster
+        if timeString == "24:00" {
+            return "23:59"
+        }
+        return timeString
     }
+    
     /// Kısa tarih + saat aralığı (örn: 15.06.2024 16:00 - 21:00)
     var formattedDateTimeRange: String {
         "\(formattedShortDate) \(formattedStartTime) - \(formattedEndTime)"
@@ -201,7 +225,7 @@ extension Assignment {
     /// Türkçe tarih + saat (örn: 2 Ocak 2025 saat 16:30)
     var formattedTurkishDateTime: String {
         let dateString = scheduleDate.toTurkishLongDate ?? scheduleDate
-        let timeString = String(startTime.prefix(5))
+        let timeString = formattedStartTime
         return "\(dateString) saat \(timeString)"
     }
     /// Kısa yazılı Türkçe tarih (örn: 2 Temmuz 2025)
@@ -270,6 +294,53 @@ enum AssignmentStatus: String, CaseIterable, Codable {
             return "xmark.circle"
         case .cancelled:
             return "xmark.circle.fill"
+        }
+    }
+} 
+
+// Assignment Work Status Enum
+enum AssignmentWorkStatus: String, CaseIterable, Codable {
+    case pending = "pending"
+    case working = "working"
+    case paused = "paused"
+    case completed = "completed"
+    
+    var displayName: String {
+        switch self {
+        case .pending:
+            return "Bekliyor"
+        case .working:
+            return "Çalışıyor"
+        case .paused:
+            return "Durduruldu"
+        case .completed:
+            return "Tamamlandı"
+        }
+    }
+    
+    var statusColor: Color {
+        switch self {
+        case .pending:
+            return .gray
+        case .working:
+            return .green
+        case .paused:
+            return .orange
+        case .completed:
+            return .blue
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .pending:
+            return "clock.fill"
+        case .working:
+            return "arrow.counterclockwise.circle.fill"
+        case .paused:
+            return "pause.fill"
+        case .completed:
+            return "checkmark.circle.fill"
         }
     }
 } 

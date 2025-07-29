@@ -38,7 +38,7 @@ struct MainView: View {
                     // Son Aktiviteler
                     // recentActivitiesSection
                     
-                    Spacer(minLength: 100)
+                    Spacer(minLength: 200)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -47,6 +47,9 @@ struct MainView: View {
             .navigationBarTitleDisplayMode(.large)
             .onReceive(timer) { _ in
                 currentTime = Date()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WorkStatusUpdated"))) { _ in
+                routeViewModel.loadAssignments()
             }
             .onAppear {
                 routeViewModel.loadAssignments()

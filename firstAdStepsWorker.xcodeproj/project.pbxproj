@@ -56,14 +56,16 @@
 		C125C97C2E170D0D00237532 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95B2E170D0D00237532 /* NotificationsView.swift */; };
 		C125C97D2E170D0D00237532 /* EditProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95D2E170D0D00237532 /* EditProfileSheet.swift */; };
 		C125C97E2E170D0D00237532 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C95E2E170D0D00237532 /* ProfileView.swift */; };
-		C125C98B2E170D0D00237532 /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96D2E170D0D00237532 /* DebugView.swift */; };
 		C125C98C2E170D0D00237532 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96E2E170D0D00237532 /* RootView.swift */; };
 		C125C98D2E170D0D00237532 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C125C96F2E170D0D00237532 /* SplashView.swift */; };
+		C15986372E379F2400DAF4CF /* ActiveTrackingInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15986362E379F2400DAF4CF /* ActiveTrackingInfo.swift */; };
+		C15986392E3811AE00DAF4CF /* DebugWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C15986382E3811AE00DAF4CF /* DebugWidget.swift */; };
+		C159863B2E38125D00DAF4CF /* LocationData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C159863A2E38125D00DAF4CF /* LocationData.swift */; };
+		C159863D2E38138E00DAF4CF /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C159863C2E38138E00DAF4CF /* DebugView.swift */; };
 		C1865AD52E2C97C100145654 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD42E2C97C000145654 /* Assignment.swift */; };
 		C1865AD82E2CE97700145654 /* AssignmentStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD72E2CE97700145654 /* AssignmentStatusBadge.swift */; };
 		C1865AD92E2CE97700145654 /* AssignmentListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865AD62E2CE97700145654 /* AssignmentListView.swift */; };
 		C1865ADB2E2CF98900145654 /* AssignmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1865ADA2E2CF98900145654 /* AssignmentDetailView.swift */; };
-		C1B91EE12E172AC800E78392 /* PreviewTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE02E172AC800E78392 /* PreviewTestView.swift */; };
 		C1B91EE32E1737B700E78392 /* MainViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE22E1737B700E78392 /* MainViews.swift */; };
 		C1B91EE52E173DFE00E78392 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE42E173DFE00E78392 /* LocationManager.swift */; };
 		C1B91EE72E17E95300E78392 /* ActiveRoutesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91EE62E17E95300E78392 /* ActiveRoutesViewModel.swift */; };
@@ -75,6 +77,7 @@
 		C1B91F0A2E17F60C00E78392 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B91F092E17F60C00E78392 /* StatusBadge.swift */; };
 		C1DF99842E2E3FA4002750B5 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */; };
 		C1DF99862E310577002750B5 /* RouteTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99852E310577002750B5 /* RouteTrackingView.swift */; };
+		C1DF99882E34E08B002750B5 /* default.csv in Resources */ = {isa = PBXBuildFile; fileRef = C1DF99872E34E08B002750B5 /* default.csv */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -148,16 +151,18 @@
 		C125C95B2E170D0D00237532 /* NotificationsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		C125C95D2E170D0D00237532 /* EditProfileSheet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditProfileSheet.swift; sourceTree = "<group>"; };
 		C125C95E2E170D0D00237532 /* ProfileView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		C125C96D2E170D0D00237532 /* DebugView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
 		C125C96E2E170D0D00237532 /* RootView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		C125C96F2E170D0D00237532 /* SplashView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		C125C98E2E170D1400237532 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C125C9902E170D2200237532 /* firstAdStepsWorker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = firstAdStepsWorker.entitlements; sourceTree = "<group>"; };
+		C15986362E379F2400DAF4CF /* ActiveTrackingInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTrackingInfo.swift; sourceTree = "<group>"; };
+		C15986382E3811AE00DAF4CF /* DebugWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugWidget.swift; sourceTree = "<group>"; };
+		C159863A2E38125D00DAF4CF /* LocationData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationData.swift; sourceTree = "<group>"; };
+		C159863C2E38138E00DAF4CF /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
 		C1865AD42E2C97C000145654 /* Assignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assignment.swift; sourceTree = "<group>"; };
 		C1865AD62E2CE97700145654 /* AssignmentListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentListView.swift; sourceTree = "<group>"; };
 		C1865AD72E2CE97700145654 /* AssignmentStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentStatusBadge.swift; sourceTree = "<group>"; };
 		C1865ADA2E2CF98900145654 /* AssignmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssignmentDetailView.swift; sourceTree = "<group>"; };
-		C1B91EE02E172AC800E78392 /* PreviewTestView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PreviewTestView.swift; sourceTree = "<group>"; };
 		C1B91EE22E1737B700E78392 /* MainViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViews.swift; sourceTree = "<group>"; };
 		C1B91EE42E173DFE00E78392 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		C1B91EE62E17E95300E78392 /* ActiveRoutesViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ActiveRoutesViewModel.swift; sourceTree = "<group>"; };
@@ -169,6 +174,7 @@
 		C1B91F092E17F60C00E78392 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
 		C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		C1DF99852E310577002750B5 /* RouteTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteTrackingView.swift; sourceTree = "<group>"; };
+		C1DF99872E34E08B002750B5 /* default.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = default.csv; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -219,6 +225,7 @@
 		C125C8D52E170AB000237532 /* firstAdStepsWorker */ = {
 			isa = PBXGroup;
 			children = (
+				C1DF99872E34E08B002750B5 /* default.csv */,
 				C125C9082E170CD200237532 /* Components */,
 				C125C9112E170CDE00237532 /* Config */,
 				C125C9232E170CEA00237532 /* Models */,
@@ -289,12 +296,14 @@
 			children = (
 				C125C9132E170CEA00237532 /* ActiveRoutesResponse.swift */,
 				C125C9142E170CEA00237532 /* APIResponse.swift */,
+				C15986362E379F2400DAF4CF /* ActiveTrackingInfo.swift */,
 				C125C9152E170CEA00237532 /* AppDelegate.swift */,
 				C125C9162E170CEA00237532 /* AppStateManager.swift */,
 				C1865AD42E2C97C000145654 /* Assignment.swift */,
 				C125C9172E170CEA00237532 /* CentralErrorManager.swift */,
 				C125C9182E170CEA00237532 /* Enums.swift */,
 				C125C9192E170CEA00237532 /* ErrorResponse.swift */,
+				C159863A2E38125D00DAF4CF /* LocationData.swift */,
 				C125C91B2E170CEA00237532 /* Log.swift */,
 				C125C91C2E170CEA00237532 /* LogManager.swift */,
 				C125C91D2E170CEA00237532 /* NavigationManager.swift */,
@@ -361,6 +370,7 @@
 		C125C9572E170D0D00237532 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				C15986382E3811AE00DAF4CF /* DebugWidget.swift */,
 				C125C9562E170D0D00237532 /* ErrorView.swift */,
 			);
 			path = Common;
@@ -396,8 +406,7 @@
 				C125C95C2E170D0D00237532 /* Home */,
 				C125C95F2E170D0D00237532 /* Profile */,
 				C1B91EF42E17EC5D00E78392 /* Route */,
-				C125C96D2E170D0D00237532 /* DebugView.swift */,
-				C1B91EE02E172AC800E78392 /* PreviewTestView.swift */,
+				C159863C2E38138E00DAF4CF /* DebugView.swift */,
 				C125C96E2E170D0D00237532 /* RootView.swift */,
 				C125C96F2E170D0D00237532 /* SplashView.swift */,
 			);
@@ -526,6 +535,7 @@
 			files = (
 				C125C8DF2E170AB100237532 /* Preview Assets.xcassets in Resources */,
 				C125C8DB2E170AB100237532 /* Assets.xcassets in Resources */,
+				C1DF99882E34E08B002750B5 /* default.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -578,12 +588,15 @@
 				C125C8D72E170AB000237532 /* firstAdStepsWorkerApp.swift in Sources */,
 				C125C9282E170CEA00237532 /* CentralErrorManager.swift in Sources */,
 				C125C97C2E170D0D00237532 /* NotificationsView.swift in Sources */,
+				C15986372E379F2400DAF4CF /* ActiveTrackingInfo.swift in Sources */,
 				C125C93E2E170CF400237532 /* UserService.swift in Sources */,
 				C1B91F022E17ED8300E78392 /* RouteViewModel.swift in Sources */,
 				C125C9792E170D0D00237532 /* HomeView.swift in Sources */,
+				C159863B2E38125D00DAF4CF /* LocationData.swift in Sources */,
 				C125C90E2E170CD200237532 /* MeshGradientButton.swift in Sources */,
 				C125C92A2E170CEA00237532 /* ErrorResponse.swift in Sources */,
 				C125C9252E170CEA00237532 /* APIResponse.swift in Sources */,
+				C159863D2E38138E00DAF4CF /* DebugView.swift in Sources */,
 				C1B91F062E17F5BF00E78392 /* RouteDetailView.swift in Sources */,
 				C125C9782E170D0D00237532 /* ErrorView.swift in Sources */,
 				C125C93D2E170CF400237532 /* RouteService.swift in Sources */,
@@ -591,12 +604,11 @@
 				C125C97D2E170D0D00237532 /* EditProfileSheet.swift in Sources */,
 				C125C90B2E170CD200237532 /* Helpers.swift in Sources */,
 				C125C94A2E170D0500237532 /* EmployeeViewModel.swift in Sources */,
-				C125C98B2E170D0D00237532 /* DebugView.swift in Sources */,
 				C125C9262E170CEA00237532 /* AppDelegate.swift in Sources */,
 				C125C9492E170D0500237532 /* AuthViewModel.swift in Sources */,
 				C125C90D2E170CD200237532 /* MeshGradientBackground.swift in Sources */,
-				C1B91EE12E172AC800E78392 /* PreviewTestView.swift in Sources */,
 				C1B91F042E17F58200E78392 /* RouteCard.swift in Sources */,
+				C15986392E3811AE00DAF4CF /* DebugWidget.swift in Sources */,
 				C125C97B2E170D0D00237532 /* NotificationListView.swift in Sources */,
 				C125C94C2E170D0500237532 /* UserViewModel.swift in Sources */,
 				C125C92C2E170CEA00237532 /* Log.swift in Sources */,

@@ -1,144 +1,229 @@
 import SwiftUI
 
 struct DebugView: View {
-    @EnvironmentObject var sessionManager: SessionManager
-    @EnvironmentObject var notificationManager: NotificationManager
+    @StateObject private var logManager = LogManager.shared
+    @StateObject private var locationManager = LocationManager.shared
+    @State private var showLocalStorageInfo = false
+    @State private var localStorageInfo = ""
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("🔍 Device Token Debug")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Text("Device token alma ve gönderme sürecini takip edin")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 16) {
+                    HStack {
+                        Text("Debug Panel")
+                            .font(.title2.bold())
+                        Spacer()
+                        Button("Temizle") {
+                            logManager.clearLogs()
+                        }
+                        .foregroundColor(.red)
                     }
-                    .padding(.bottom, 20)
                     
-                    // Notification Status
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("📱 Notification Durumu")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        HStack {
-                            Text("İzin Durumu:")
-                                .foregroundColor(.gray)
-                            Spacer()
-                            Text(notificationManager.isPermissionGranted ? "✅ Verildi" : "❌ Verilmedi")
-                                .foregroundColor(notificationManager.isPermissionGranted ? .green : .red)
-                        }
-                        
-                        HStack {
-                            Text("Authorization Status:")
-                                .foregroundColor(.gray)
-                            Spacer()
-                            Text("\(notificationManager.authorizationStatus.rawValue)")
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding()
-                    .background(Theme.secondaryBackground)
-                    .cornerRadius(12)
+                                                        HStack(spacing: 12) {
+                                        // Local Storage Info Button
+                                        Button("Local Storage Bilgilerini Göster") {
+                                            loadLocalStorageInfo()
+                                            showLocalStorageInfo = true
+                                        }
+                                        .foregroundColor(.blue)
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 16)
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(8)
+                                        
+                                        // Clear Local Storage Button
+                                        Button("Local Storage Temizle") {
+                                            clearLocalStorage()
+                                        }
+                                        .foregroundColor(.red)
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 16)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(8)
+                                        
+                                        // Retry Pending Location Data Button
+                                        Button("Pending Konumları Gönder") {
+                                            locationManager.retryPendingLocationData()
+                                        }
+                                        .foregroundColor(.green)
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 16)
+                                        .background(Color.green.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
                     
-                    // Device Token Info
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("🔑 Device Token Bilgileri")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
+                    // Smart Filtering Controls
+                    VStack(spacing: 8) {
                         HStack {
-                            Text("Token Var mı:")
+                            Text("Akıllı Konum Filtreleme:")
+                                .font(.caption)
                                 .foregroundColor(.gray)
                             Spacer()
-                            Text(sessionManager.deviceToken != nil ? "✅ Var" : "❌ Yok")
-                                .foregroundColor(sessionManager.deviceToken != nil ? .green : .red)
+                            Text("Durum: \(locationManager.smartFilteringStatus)")
+                                .font(.caption)
+                                .foregroundColor(locationManager.smartFilteringStatus == "Açık" ? .green : .orange)
                         }
                         
-                        if let token = sessionManager.deviceToken {
-                            HStack {
-                                Text("Token Uzunluğu:")
-                                    .foregroundColor(.gray)
-                                Spacer()
-                                Text("\(token.count) karakter")
-                                    .foregroundColor(.white)
+                        HStack(spacing: 12) {
+                            Button("Filtrelemeyi Aç") {
+                                locationManager.setSmartFilteringEnabled(true)
                             }
+                            .foregroundColor(.green)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(6)
                             
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Token (İlk 20 karakter):")
-                                    .foregroundColor(.gray)
-                                    .font(.caption)
-                                
-                                Text(String(token.prefix(20)) + "...")
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .padding(8)
-                                    .background(Color.black.opacity(0.3))
-                                    .cornerRadius(8)
+                            Button("Filtrelemeyi Kapat") {
+                                locationManager.setSmartFilteringEnabled(false)
                             }
+                            .foregroundColor(.orange)
+                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .background(Color.orange.opacity(0.1))
+                            .cornerRadius(6)
                         }
-                    }
-                    .padding()
-                    .background(Theme.secondaryBackground)
-                    .cornerRadius(12)
-                    
-                    // User Status
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("👤 Kullanıcı Durumu")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        HStack {
-                            Text("Giriş Yapıldı mı:")
-                                .foregroundColor(.gray)
-                            Spacer()
-                            Text(sessionManager.isAuthenticated ? "✅ Evet" : "❌ Hayır")
-                                .foregroundColor(sessionManager.isAuthenticated ? .green : .red)
-                        }
-                        
-                        if let user = sessionManager.currentUser {
-                            HStack {
-                                Text("User ID:")
-                                    .foregroundColor(.gray)
-                                Spacer()
-                                Text(user.id)
-                                    .foregroundColor(.white)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Theme.secondaryBackground)
-                    .cornerRadius(12)
-                    
-                    // Action Buttons
-                    VStack(spacing: 12) {
-                        Button("🔄 Sayfayı Yenile") {
-                            // View'ı yenilemek için
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.orange)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
                     }
                 }
                 .padding()
+                .background(Color.gray.opacity(0.1))
+                
+                // Logs
+                List {
+                    ForEach(logManager.logs) { entry in
+                        LogEntryView(entry: entry)
+                    }
+                }
+                .listStyle(PlainListStyle())
             }
-            .background(Theme.background)
-            .navigationTitle("Debug")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
         }
+        .alert("Local Storage Bilgileri", isPresented: $showLocalStorageInfo) {
+            Button("Kopyala") {
+                UIPasteboard.general.string = localStorageInfo
+            }
+            Button("Tamam", role: .cancel) { }
+        } message: {
+            Text(localStorageInfo)
+        }
+    }
+    
+    private func loadLocalStorageInfo() {
+        var info = "=== LOCAL STORAGE BİLGİLERİ ===\n\n"
+        
+        // ActiveTrackingInfo
+        if let trackingInfo = locationManager.loadActiveTrackingInfo() {
+            info += "📱 ACTIVE TRACKING INFO:\n"
+            info += "Schedule ID: \(trackingInfo.routeId)\n"
+            info += "Assignment ID: \(trackingInfo.assignmentId)\n"
+            info += "Employee ID: \(trackingInfo.employeeId)\n"
+            info += "Start Time: \(trackingInfo.startTime)\n"
+            info += "End Time: \(trackingInfo.endTime)\n"
+            info += "Status: \(trackingInfo.status)\n"
+            info += "Last Location Update: \(trackingInfo.lastLocationUpdate?.description ?? "nil")\n"
+            info += "Is Time Active: \(trackingInfo.isTimeActive)\n"
+            info += "Is Expired: \(trackingInfo.isExpired)\n"
+            info += "Remaining Minutes: \(trackingInfo.remainingMinutes)\n\n"
+        } else {
+            info += "📱 ACTIVE TRACKING INFO: Bulunamadı\n\n"
+        }
+        
+        // LocationManager State
+        info += "📍 LOCATION MANAGER STATE:\n"
+        info += "Is Route Tracking: \(locationManager.isRouteTracking)\n"
+        info += "Active Schedule ID: \(locationManager.activeScheduleId ?? "nil")\n"
+        info += "Current Location: \(locationManager.currentLocation?.coordinate.latitude ?? 0), \(locationManager.currentLocation?.coordinate.longitude ?? 0)\n"
+        info += "Location Permission: \(locationManager.locationPermissionStatus.rawValue)\n"
+        info += "Tracking Start Date: \(locationManager.trackingStartDate?.description ?? "nil")\n"
+        info += "Last Location Update: \(locationManager.lastLocationUpdate?.description ?? "nil")\n\n"
+        
+        // Current Route Info
+        if let currentRoute = locationManager.currentRoute {
+            info += "🛣️ CURRENT SCHEDULE:\n"
+            info += "Schedule ID: \(currentRoute.id)\n"
+            info += "Assignment ID: \(currentRoute.assignmentId)\n"
+            info += "Work Status: \(currentRoute.workStatus)\n"
+            info += "Schedule Date: \(currentRoute.scheduleDate)\n"
+            info += "Start Time: \(currentRoute.startTime)\n"
+            info += "End Time: \(currentRoute.endTime)\n\n"
+        } else {
+            info += "🛣️ CURRENT SCHEDULE: Bulunamadı\n\n"
+        }
+        
+        // User Defaults Keys
+        info += "🔑 USER DEFAULTS KEYS:\n"
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys.sorted()
+        for key in allKeys {
+            if key.contains("ActiveTracking") || key.contains("Location") || key.contains("Route") {
+                let value = UserDefaults.standard.object(forKey: key)
+                info += "\(key): \(String(describing: value))\n"
+            }
+        }
+        
+        localStorageInfo = info
+    }
+    
+    private func clearLocalStorage() {
+        // ActiveTrackingInfo'yu temizle
+        locationManager.clearActiveTrackingInfo()
+        
+        // LocationManager state'ini temizle
+        locationManager.clearLocationData()
+        
+        // UserDefaults'tan ilgili key'leri temizle
+        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        for key in allKeys {
+            if key.contains("ActiveTracking") || key.contains("Location") || key.contains("Route") {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+        
+        // Log ekle
+        LogManager.shared.log("Local storage temizlendi", level: .info)
+        
+        // Bilgileri yeniden yükle
+        loadLocalStorageInfo()
+    }
+}
+
+struct LogEntryView: View {
+    let entry: LogEntry
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(entry.level.emoji)
+                    .font(.caption)
+                Text(entry.message)
+                    .font(.caption)
+                    .foregroundColor(getColor(for: entry.level))
+                Spacer()
+                Text(formatTime(entry.timestamp))
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+    
+    private func getColor(for level: LogLevel) -> Color {
+        switch level {
+        case .debug: return .gray
+        case .info: return .blue
+        case .warning: return .orange
+        case .error: return .red
+        }
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
     }
 }
 
 #Preview {
     DebugView()
-        .environmentObject(SessionManager.shared)
-        .environmentObject(NotificationManager.shared)
 } 

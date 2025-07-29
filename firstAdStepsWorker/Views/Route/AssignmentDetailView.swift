@@ -546,7 +546,7 @@ struct AssignmentDetailView: View {
                             .buttonStyle(PlainButtonStyle())
                     })
                     .disabled(isAccepting)
-
+                    
                     // Reddet Butonu
                     Button(action: {
                         showingRejectSheet = true
@@ -686,12 +686,12 @@ struct RedReasonSheet: View {
                 
                 Button(action: onCancel, label: {
                     Text("Vazgeç")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color(.systemGray5))
-                        .cornerRadius(10)
+                    .font(.headline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color(.systemGray5))
+                    .cornerRadius(10)
                 })
 
                 Button(action: { onReject(reason) }) {
@@ -731,12 +731,12 @@ struct AcceptInfoSheet: View {
                 .multilineTextAlignment(.center)
             Button(action: onClose, label: {
                 Text("Tamam")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(Theme.primary)
-                    .cornerRadius(12)
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
+                .background(Theme.primary)
+                .cornerRadius(12)
             })
         }
         .padding(32)

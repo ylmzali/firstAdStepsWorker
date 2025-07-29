@@ -26,8 +26,88 @@ struct RoutesView: View {
                 .fullScreenCover(item: $selectedRoute) { route in
                     RouteTrackingView(route: route)
                 }
+                .onAppear {
+                    setupWorkStatusObserver()
+                    setupActiveRouteObserver()
+                }
+                .onDisappear {
+                    removeWorkStatusObserver()
+                    removeActiveRouteObserver()
+                }
         }
     }
+    
+    private func setupWorkStatusObserver() {
+        // Work status güncellemelerini dinle
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("WorkStatusUpdated"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let userInfo = notification.userInfo,
+               let assignmentId = userInfo["assignment_id"] as? String,
+               let status = userInfo["status"] as? String {
+                
+                print("🔄 [RoutesView] Work status güncellendi - Assignment ID: \(assignmentId), Status: \(status)")
+                
+                // Rotaları yenile
+                DispatchQueue.main.async {
+                    self.refreshRoutes()
+                }
+            }
+        }
+    }
+    
+    private func removeWorkStatusObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("WorkStatusUpdated"), object: nil)
+    }
+    
+    private func removeActiveRouteObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("OpenActiveRoute"), object: nil)
+    }
+    
+    private func setupActiveRouteObserver() {
+        // Aktif route açma notification'ını dinle
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("OpenActiveRoute"),
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let userInfo = notification.userInfo,
+               let assignmentId = userInfo["assignment_id"] as? String {
+                self.openActiveRoute(assignmentId: assignmentId)
+            }
+        }
+    }
+    
+    private func openActiveRoute(assignmentId: String) {
+        print("🔍 [RoutesView] Aktif route aranıyor - Assignment ID: \(assignmentId)")
+        
+        // Route'lar yüklendiyse hemen ara
+        if !viewModel.routes.isEmpty {
+            findAndOpenRoute(assignmentId: assignmentId)
+        } else {
+            // Route'lar henüz yüklenmemişse, yüklendikten sonra ara
+            print("⏳ [RoutesView] Route'lar henüz yüklenmemiş, bekleniyor...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.findAndOpenRoute(assignmentId: assignmentId)
+            }
+        }
+    }
+    
+    private func findAndOpenRoute(assignmentId: String) {
+        print("🔍 [RoutesView] Route listesinde arama yapılıyor...")
+        
+        if let activeRoute = viewModel.routes.first(where: { $0.assignmentId == assignmentId }) {
+            print("✅ [RoutesView] Aktif route bulundu: \(activeRoute.id)")
+            selectedRoute = activeRoute
+        } else {
+            print("❌ [RoutesView] Aktif route bulunamadı - Assignment ID: \(assignmentId)")
+            print("📋 [RoutesView] Mevcut route'lar: \(viewModel.routes.map { "\($0.id) (\($0.assignmentId))" })")
+        }
+    }
+    
+
     
     private var loadingView: some View {
         VStack(spacing: 20) {

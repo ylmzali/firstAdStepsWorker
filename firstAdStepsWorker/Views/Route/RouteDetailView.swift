@@ -17,7 +17,7 @@ struct RouteDetailView: View {
         span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03)
     )
     @StateObject private var locationManager = LocationManager.shared
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -29,12 +29,29 @@ struct RouteDetailView: View {
                                 .font(.title2.bold())
                             Label(route.scheduleDate, systemImage: "calendar")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                            .foregroundColor(.secondary)
+                            
+                            // Work Status
+                            if route.workStatus == "working" {
+                                HStack(spacing: 6) {
+                                    Circle()
+                                        .fill(Color.green)
+                                        .frame(width: 8, height: 8)
+                                    Text("Çalışıyor")
+                                        .font(.caption)
+                                        .foregroundColor(.green)
+                                        .fontWeight(.medium)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.green.opacity(0.1))
+                                .cornerRadius(8)
+                            }
                         }
                         Spacer()
                         AssignmentStatusBadge(status: route.assignmentStatus)
                     }
-
+                    
                     // Küçük Harita Önizlemesi
                     mapSection
                         .frame(height: 160)
@@ -55,9 +72,9 @@ struct RouteDetailView: View {
                             .font(.headline)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.green)
                 }
                 .padding()
             }
@@ -76,15 +93,15 @@ struct RouteDetailView: View {
             }
         }
     }
-
+    
     // Küçük harita önizlemesi
     private var mapSection: some View {
         Map(coordinateRegion: $region)
             .onAppear {
                 updateRegionToCurrentLocation()
-            }
+        }
     }
-
+    
     private func updateRegionToCurrentLocation() {
         if let loc = locationManager.currentLocation {
             region.center = loc.coordinate
