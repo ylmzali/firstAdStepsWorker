@@ -168,6 +168,11 @@ class RouteViewModel: ObservableObject {
     var pendingAssignments: [Assignment] {
         assignments.filter { $0.assignmentStatus == .pending }
     }
+    
+    // Sadece kabul edilen assignment'ları döndürür
+    var acceptedAssignments: [Assignment] {
+        assignments.filter { $0.assignmentStatus == .accepted }
+    }
 
     /*
     private func validate(route: Route?) -> Bool {

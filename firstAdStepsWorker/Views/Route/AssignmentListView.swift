@@ -14,31 +14,73 @@ struct AssignmentListView: View {
                     ErrorView(message: errorMessage) {
                         routeViewModel.loadAssignments()
                     }
-                } else if routeViewModel.pendingAssignments.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 48))
-                            .foregroundColor(Theme.gray400)
-                        
-                        Text("Henüz teklif yok")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        Text("Size gelen teklifler burada görünecek")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
                 } else {
-                    List {
-                        ForEach(routeViewModel.pendingAssignments, id: \ .id) { assignment in
-                            OfferRowView(assignment: assignment) {
-                                selectedAssignment = assignment
+                    ScrollView {
+                        LazyVStack(spacing: 20) {
+                            // Bekleyen Teklifler
+                            if !routeViewModel.pendingAssignments.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Bekleyen Teklifler")
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Theme.gray800)
+                                        .padding(.horizontal, 16)
+                                    
+                                    LazyVStack(spacing: 12) {
+                                        ForEach(routeViewModel.pendingAssignments, id: \.id) { assignment in
+                                            OfferRowView(assignment: assignment) {
+                                                selectedAssignment = assignment
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                }
+                            } else {
+                                // Bekleyen teklif yok view'i
+                                VStack(spacing: 8) {
+                                    Image(systemName: "doc.text")
+                                        .font(.system(size: 48))
+                                        .foregroundColor(Theme.gray400)
+                                    
+                                    Text("Bekleyen teklif yok")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Text("Size gelen yeni teklifler burada görünecek")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.center)
+                                }
+                                .padding()
                             }
+                            
+                            // Kabul Edilen Teklifler
+                            if !routeViewModel.acceptedAssignments.isEmpty {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("Kabul Edilen Teklifler")
+                                        .font(.title3)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Theme.gray800)
+                                        .padding(.horizontal, 16)
+                                    
+                                    LazyVStack(spacing: 12) {
+                                        ForEach(routeViewModel.acceptedAssignments, id: \.id) { assignment in
+                                            OfferRowView(assignment: assignment) {
+                                                selectedAssignment = assignment
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                }
+                            }
+                            
+                            // Alt boşluk (Tab bar için)
+                            Spacer(minLength: 100)
                         }
+                        .padding(.vertical, 16)
                     }
-                    .listStyle(PlainListStyle())
+                    .scrollIndicators(.hidden)
+
                 }
             }
             .navigationTitle("Teklifler")
@@ -95,25 +137,19 @@ struct OfferRowView: View {
                 
                 // Assignment Info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Görev #\(assignment.id)")
+                    Text(assignment.assignmentOfferDescription ?? "Teklif Başlığı")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
-                    Text(assignment.assignmentOfferDescription ?? "Açıklama yok")
+                    Text("\(formatAssignmentDateTime(assignment))")
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(1)
                     
-                    VStack(spacing: 8) {
-                        Text("\(formatAssignmentDateTime(assignment))")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        HStack {
-                            AssignmentStatusBadge(status: assignment.assignmentStatus)
-                            Spacer()
-                        }
+                    HStack {
+                        AssignmentStatusBadge(status: assignment.assignmentStatus)
+                        Spacer()
                     }
                 }
                 

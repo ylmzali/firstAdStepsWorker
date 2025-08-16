@@ -126,12 +126,13 @@ struct Theme {
     static let info = Color(hex: "4A90E2")        // Mavi
     
     // Eski renkler (geriye uyumluluk için)
-    static let blue400 = Color(hex: "8675FF")     // Mor olarak güncellendi
+    static let blue400 = Color(hex: "4A90E2")     // Mavi
     static let yellow400 = Color(hex: "FFD93D")   // Güncellendi
     static let pink400 = Color(hex: "FF6B9D")     // Güncellendi
     static let red400 = Color(hex: "FF6B6B")      // Güncellendi
     static let green400 = Color(hex: "4ECDC4")    // Güncellendi
     static let navy400 = Color(hex: "2D2B55")     // Güncellendi
+    static let orange400 = Color(hex: "FF8C42")   // Turuncu
     
     // Arka plan renkleri
     static let background = Color(hex: "F8F8FF")  // Ana arka plan

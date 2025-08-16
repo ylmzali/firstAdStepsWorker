@@ -9,7 +9,7 @@ struct HomeView: View {
     @State private var searchText = ""
     @State private var showActiveTrackingWidget = false
     @State private var activeTrackingInfo: ActiveTrackingInfo?
-    @State private var showDebugView = false
+
     @State private var showInfoSheet = false
     @State private var route: Assignment?
     @State private var totalDistance: Double = 0
@@ -55,16 +55,7 @@ struct HomeView: View {
                 }
             }
             
-            // Debug Widget (sadece development'ta göster)
-            #if DEBUG
-            VStack {
-                Spacer()
-                DebugWidget {
-                    showDebugView = true
-                }
-                .padding(.bottom, 160) // Active tracking widget'ın üstünde
-            }
-            #endif
+
         }
         .ignoresSafeArea(.all, edges: .bottom)
         .background(Color(.systemGroupedBackground))
@@ -87,9 +78,7 @@ struct HomeView: View {
                 RouteInfoSheet(route: route, totalDistance: totalDistance, averageSpeed: averageSpeed, isRouteActive: isRouteActive, routeLocations: routeLocations)
             }
         }
-        .sheet(isPresented: $showDebugView) {
-            DebugView()
-        }
+
     }
     
     private func checkActiveTracking() {

@@ -168,12 +168,23 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func applicationDidEnterBackground(_ application: UIApplication) {
         print("⬇️ AppDelegate: Uygulama arka plana alındı")
-        // Uygulama arka plana alındığında
+        
+        // Background task başlat
+        let backgroundTask = application.beginBackgroundTask(withName: "AppBackgroundTask") {
+            print("⚠️ AppDelegate: Background task süresi doldu")
+        }
+        
+        // LocationManager'a background'a geçtiğini bildir
+        LocationManager.shared.appDidEnterBackground()
+        
+        print("🔄 AppDelegate: Background task başlatıldı: \(backgroundTask)")
     }
     
     func applicationWillEnterForeground(_ application: UIApplication) {
         print("⬆️ AppDelegate: Uygulama ön plana geldi")
-        // Uygulama ön plana geldiğinde
+        
+        // LocationManager'a foreground'a geçtiğini bildir
+        LocationManager.shared.appWillEnterForeground()
     }
     
     // MARK: - Location Permission Management

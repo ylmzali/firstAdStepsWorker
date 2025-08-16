@@ -79,7 +79,8 @@
 		C1DF99842E2E3FA4002750B5 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */; };
 		C1DF99862E310577002750B5 /* RouteTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99852E310577002750B5 /* RouteTrackingView.swift */; };
 		C1DF99882E34E08B002750B5 /* default.csv in Resources */ = {isa = PBXBuildFile; fileRef = C1DF99872E34E08B002750B5 /* default.csv */; };
-
+		C1DF99892E34E08B002750B5 /* WorkerStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99882E34E08B002750B5 /* WorkerStats.swift */; };
+		C1DF998A2E34E08B002750B5 /* WorkerStatsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1DF99892E34E08B002750B5 /* WorkerStatsService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -178,7 +179,8 @@
 		C1DF99832E2E3FA4002750B5 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
 		C1DF99852E310577002750B5 /* RouteTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteTrackingView.swift; sourceTree = "<group>"; };
 				C1DF99872E34E08B002750B5 /* default.csv */ = {isa = PBXFileReference; lastKnownFileType = text; path = default.csv; sourceTree = "<group>"; };
-
+		C1DF99882E34E08B002750B5 /* WorkerStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerStats.swift; sourceTree = "<group>"; };
+		C1DF99892E34E08B002750B5 /* WorkerStatsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerStatsService.swift; sourceTree = "<group>"; };
 		/* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -316,7 +318,7 @@
 				C125C9212E170CEA00237532 /* SessionManager.swift */,
 				C125C9222E170CEA00237532 /* User.swift */,
 				C159863E2E4375CD00DAF4CF /* WorkTimeTracker.swift */,
-
+				C1DF99882E34E08B002750B5 /* WorkerStats.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -332,7 +334,7 @@
 				C125C9382E170CF400237532 /* UserService.swift */,
 				C15986402E4375E400DAF4CF /* WorkTimeManager.swift */,
 				C15986412E4375E400DAF4CF /* WorkTimeService.swift */,
-
+				C1DF99892E34E08B002750B5 /* WorkerStatsService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";

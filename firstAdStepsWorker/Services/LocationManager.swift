@@ -14,14 +14,18 @@ class LocationManager: NSObject, ObservableObject {
     private let locationManager = CLLocationManager()
     private let activeTrackingKey = "ActiveTrackingInfo"
     
-    // MARK: - Published Properties
+    // MARK: - Properties
     @Published var currentLocation: CLLocation?
     @Published var locationPermissionStatus: CLAuthorizationStatus = .notDetermined
     @Published var isRouteTracking = false
     @Published var activeScheduleId: String?
     @Published var currentRoute: Assignment?
     @Published var trackingStartDate: Date?
+    @Published var routeLocations: [LocationData] = []
     @Published var lastLocationUpdate: Date?
+    
+    // WorkTimeManager entegrasyonu
+    private let workTimeManager = WorkTimeManager.shared
     
     // Background task management
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
@@ -32,15 +36,56 @@ class LocationManager: NSObject, ObservableObject {
     
     // Location history for tracking
     private var locationHistory: [CLLocation] = []
-    private var lastLocationUpdateTime: Date?
     
-    // Pending location data for offline sending
-    private var pendingLocationData: [LocationData] = []
-    private let pendingLocationKey = "pending_location_data"
+    // Pending location data kaldırıldı - artık toplu gönderim sistemi kullanılıyor
     
-    // Public property for pending location data count
+    // Toplu konum gönderimi için buffer
+    private var locationBuffer: [LocationPoint] = []
+    private let maxBufferSize = 15 // Maksimum 15 konum tut
+    private var bulkSendTimer: Timer?
+    private let bulkSendInterval: TimeInterval = 30.0 // 30 saniyede bir gönder
+    private var locationCollectionTimer: Timer?
+    private let locationCollectionInterval: TimeInterval = 5.0 // 5 saniyede bir konum topla
+    
+    // Konum gruplandırma için geçici buffer
+    private var tempLocationBuffer: [LocationPoint] = []
+    private let groupingDistanceThreshold: Double = 10.0 // 10 metre içindeki konumları grupla
+    private let groupingTimeThreshold: TimeInterval = 60.0 // 60 saniye içindeki konumları grupla
+    private let minSpeedThreshold: Double = 1.0 // 1 m/s altındaki hızları durma olarak kabul et
+    
+    // Public property for pending location data count (kaldırıldı)
     var pendingLocationDataCount: Int {
-        return pendingLocationData.count
+        return 0 // Artık kullanılmıyor
+    }
+    
+    // Public property for smart filtering status
+    var smartFilteringEnabled: Bool {
+        get { return isSmartFilteringEnabled }
+        set(newValue) {
+            isSmartFilteringEnabled = newValue
+            // UserDefaults'a kaydet
+            UserDefaults.standard.set(newValue, forKey: "smartFilteringEnabled")
+            print("🔧 [LocationManager] Smart filtering \(newValue ? "açıldı" : "kapatıldı")")
+        }
+    }
+    
+    // Public property for route pause status
+    var isRoutePaused: Bool {
+        guard let currentRoute = currentRoute else { return false }
+        return currentRoute.workStatus == "paused"
+    }
+    
+    // Public property for total distance
+    var totalDistance: Double {
+        return calculateTotalDistance() / 1000.0 // metre'den km'ye çevir
+    }
+    
+    // Public property for average speed
+    var averageSpeed: Double {
+        guard !locationHistory.isEmpty else { return 0.0 }
+        let totalDistance = calculateTotalDistance()
+        let totalTime = locationHistory.last?.timestamp.timeIntervalSince(locationHistory.first?.timestamp ?? Date()) ?? 0
+        return totalTime > 0 ? (totalDistance / totalTime) * 3.6 : 0.0 // m/s'den km/h'ye çevir
     }
     
     // MARK: - Smart Location Filtering
@@ -50,7 +95,7 @@ class LocationManager: NSObject, ObservableObject {
     private var lastSentTime: Date?
     
     // Smart filtering configuration
-    private var isSmartFilteringEnabled: Bool = true
+    @Published private var isSmartFilteringEnabled: Bool = true
     private var minDistanceForSending: Double = 3.0 // 3 metre
     private var minHeadingChange: Double = 15.0 // 15 derece
     private var minSpeedChange: Double = 2.0 // 2 m/s
@@ -61,8 +106,10 @@ class LocationManager: NSObject, ObservableObject {
         super.init()
         setupLocationManager()
         setupNotificationObservers()
-        loadPendingLocationData()
+        loadSmartFilteringSettings()
         checkExistingTrackingStatus()
+        setupBulkSendTimer()
+        setupLocationCollectionTimer()
     }
     
     private func setupLocationManager() {
@@ -97,10 +144,17 @@ class LocationManager: NSObject, ObservableObject {
         )
     }
     
-    @objc private func appDidEnterBackground() {
+    @objc public func appDidEnterBackground() {
+        print("🔄 [LocationManager] Uygulama background'a geçiyor")
+        
         if isRouteTracking {
+            // Background task başlat
             startBackgroundTask()
             startBackgroundMonitoring()
+            
+            // Background'da konum güncellemelerini devam ettir
+            print("🔄 [LocationManager] Background'da konum takibi devam ediyor")
+            locationManager.startUpdatingLocation()
             
             // İlk konum gönderimini hemen yap
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -109,14 +163,11 @@ class LocationManager: NSObject, ObservableObject {
         }
     }
     
-    @objc private func appWillEnterForeground() {
+    @objc public func appWillEnterForeground() {
         endBackgroundTask()
         
-        // Pending konum verilerini tekrar göndermeyi dene
-        if !pendingLocationData.isEmpty {
-            print("🔄 [LocationManager] Uygulama foreground'a geldi, pending konum verileri gönderiliyor")
-            retryPendingLocationData()
-        }
+        // Artık pending location data kullanılmıyor, toplu gönderim sistemi kullanılıyor
+        print("ℹ️ [LocationManager] Uygulama foreground'a geldi, toplu gönderim sistemi aktif")
     }
     
     @objc private func appWillTerminate() {
@@ -138,10 +189,12 @@ class LocationManager: NSObject, ObservableObject {
     
     private func startBackgroundTask() {
         backgroundTaskID = UIApplication.shared.beginBackgroundTask(withName: "RouteTracking") {
+            print("⚠️ [LocationManager] Background task süresi doldu")
             self.endBackgroundTask()
         }
         
         let remainingTime = UIApplication.shared.backgroundTimeRemaining
+        print("🔄 [LocationManager] Background task başlatıldı: \(backgroundTaskID.rawValue), kalan süre: \(remainingTime) saniye")
         LogManager.shared.log("Background task başlatıldı: \(backgroundTaskID.rawValue), kalan süre: \(remainingTime) saniye")
     }
     
@@ -160,7 +213,7 @@ class LocationManager: NSObject, ObservableObject {
         stopBackgroundMonitoring()
         
         print("🔄 [LocationManager] Yeni background timer oluşturuluyor...")
-        backgroundTimer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { _ in
+        backgroundTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
             self.checkActiveTrackingInBackground()
         }
         
@@ -282,6 +335,9 @@ class LocationManager: NSObject, ObservableObject {
         
         print("🚀 [LocationManager] State güncellendi - isRouteTracking: \(isRouteTracking)")
         
+        // WorkTimeManager ile çalışma zamanını başlat
+        workTimeManager.startWork(assignment: route)
+        
         locationManager.startUpdatingLocation()
         print("🚀 [LocationManager] Location updates başlatıldı")
         
@@ -304,6 +360,14 @@ class LocationManager: NSObject, ObservableObject {
         startBackgroundMonitoring()
         print("🚀 [LocationManager] Background monitoring başlatıldı")
         
+        // Konum toplama timer'ını başlat
+        startLocationCollectionTimer()
+        print("🚀 [LocationManager] Konum toplama timer'ı başlatıldı")
+        
+        // Toplu konum gönderimi timer'ını başlat
+        startBulkSendTimer()
+        print("🚀 [LocationManager] Toplu konum gönderimi timer'ı başlatıldı")
+        
         // Rota tamamlama timer'ını başlat
         startRouteCompletionTimer()
         print("🚀 [LocationManager] Rota tamamlama timer'ı başlatıldı")
@@ -312,10 +376,18 @@ class LocationManager: NSObject, ObservableObject {
     }
     
     func stopRouteTracking() {
+        // Buffer'daki konumları hemen gönder
+        sendBulkLocations(status: "paused")
+        
+        // WorkTimeManager ile çalışmayı duraklat
+        workTimeManager.pauseWork()
+        
         updateActiveTrackingInfo(status: "paused")
         isRouteTracking = false
         activeScheduleId = nil
         stopBackgroundMonitoring()
+        stopLocationCollectionTimer()
+        stopBulkSendTimer()
         stopRouteCompletionTimer()
         
         updateAssignmentWorkStatus(status: "paused")
@@ -324,189 +396,47 @@ class LocationManager: NSObject, ObservableObject {
     }
     
     func completeRouteTracking() {
+        print("🔴 [LocationManager] completeRouteTracking çağrıldı")
+        
+        // Buffer'daki konumları hemen gönder
+        sendBulkLocations(status: "completed")
+        
+        // WorkTimeManager ile çalışmayı tamamla
+        workTimeManager.completeWork()
+        
         updateAssignmentWorkStatus(status: "completed")
         clearActiveTrackingInfo()
         isRouteTracking = false
         activeScheduleId = nil
         stopBackgroundMonitoring()
+        stopLocationCollectionTimer()
+        stopBulkSendTimer()
         stopRouteCompletionTimer()
         
         LogManager.shared.log("Route tracking tamamlandı")
+        print("🔴 [LocationManager] completeRouteTracking tamamlandı")
     }
     
-    func sendLocationToServer() {
-        guard isRouteTracking,
-              let currentLocation = currentLocation,
-              let currentRoute = currentRoute else {
-            return
-        }
+    func sendLocationToServer(status: String = "active") {
+        // Eski tek tek gönderim sistemi kapatıldı
+        // Artık sadece toplu gönderim sistemi kullanılıyor
+        print("ℹ️ [LocationManager] Eski tek tek gönderim sistemi kapatıldı, toplu gönderim sistemi kullanılıyor")
         
-        // Akıllı filtreleme kontrolü
-        if !shouldSendLocation(currentLocation) {
-            print("🚫 [LocationManager] Konum akıllı filtreleme nedeniyle gönderilmiyor")
-            return
-        }
-        
-        // Son güncelleme zamanını kontrol et (15 saniye minimum aralık)
-        if let lastUpdate = lastLocationUpdate,
-           Date().timeIntervalSince(lastUpdate) < 15 {
-            return
-        }
-        
-        // Zaman kontrolü
-        if !isRouteTimeActive() {
-            LogManager.shared.log("Rota zamanı doldu, tracking tamamlanıyor")
-            autoCompleteRoute()
-            return
-        }
-        
-        print("✅ [LocationManager] Konum gönderiliyor - Akıllı filtreleme geçti")
-        
-        let locationData = LocationData(
-            routeId: currentRoute.routeId,
-            latitude: currentLocation.coordinate.latitude,
-            longitude: currentLocation.coordinate.longitude,
-            accuracy: currentLocation.horizontalAccuracy,
-            timestamp: Date(),
-            speed: currentLocation.speed,
-            heading: currentLocation.course,
-            assignedPlanId: currentRoute.planId,
-            assignedScreenId: currentRoute.assignmentScreenId,
-            assignedEmployeeId: currentRoute.assignmentEmployeeId,
-            assignedScheduleId: currentRoute.id,
-            sessionDate: formatDateForAPI(Date()),
-            actualStartTime: trackingStartDate ?? Date(),
-            actualEndTime: Date(),
-            status: "active",
-            batteryLevel: Double(UIDevice.current.batteryLevel),
-            signalStrength: getSignalStrength(),
-            actualDurationMin: calculateActualDuration(),
-            distanceFromPrevious: calculateDistanceFromPrevious(),
-            totalDistance: calculateTotalDistance()
-        )
-        
-        // Önce local'e kaydet
-        addPendingLocationData(locationData)
-        
-        // Sonra server'a gönder
-        sendLocationToAPI(locationData)
-        
-        // Son gönderilen konum bilgilerini güncelle
-        updateLastSentLocation(currentLocation)
-        
-        // ActiveTrackingInfo güncelle
-        updateActiveTrackingInfo(status: "working", lastLocationUpdate: Date())
-        
-        lastLocationUpdate = Date()
-    }
-    
-    private func sendLocationToAPI(_ locationData: LocationData) {
-        guard let url = URL(string: AppConfig.API.baseURL + AppConfig.Endpoints.trackRouteLocation) else {
-            LogManager.shared.log("Geçersiz URL")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(AppConfig.API.appToken, forHTTPHeaderField: "app_token")
-
-        do {
-            let jsonData = try JSONEncoder().encode(locationData)
-            request.httpBody = jsonData
-            
-            LogManager.shared.log("Konum gönderiliyor: \(locationData.latitude), \(locationData.longitude)")
-            
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        print("❌ [LocationManager] Konum gönderme hatası: \(error.localizedDescription)")
-                        LogManager.shared.log("Konum gönderme hatası: \(error.localizedDescription)")
-                        return
-                    }
-                    
-                    if let httpResponse = response as? HTTPURLResponse {
-                        print("📡 [LocationManager] Konum gönderme yanıtı: \(httpResponse.statusCode)")
-                        
-                        if httpResponse.statusCode == 200 {
-                            // Başarılı gönderim - pending listesinden kaldır
-                            self.removeLocationDataFromPending(locationData)
-                            print("✅ [LocationManager] Konum verisi başarıyla gönderildi")
-                        } else {
-                            print("❌ [LocationManager] Konum gönderilemedi - HTTP \(httpResponse.statusCode)")
-                        }
-                    }
-                }
-            }.resume()
-        } catch {
-            print("❌ [LocationManager] Konum verisi encode hatası: \(error)")
-            LogManager.shared.log("Konum verisi encode hatası: \(error)")
+        // Sadece durma/tamamlama durumlarında hemen gönderim yap
+        if status == "paused" || status == "completed" {
+            print("🚨 [LocationManager] Acil durum gönderimi - Status: \(status)")
+            sendBulkLocations(status: status)
         }
     }
     
-    // MARK: - Pending Location Data Management
+    // Eski tek tek gönderim metodu kaldırıldı - artık toplu gönderim kullanılıyor
     
-    private func addPendingLocationData(_ locationData: LocationData) {
-        pendingLocationData.append(locationData)
-        savePendingLocationData()
-        print("📝 [LocationManager] Konum verisi pending listesine eklendi")
-    }
+    // MARK: - Pending Location Data Management (Kaldırıldı - Artık Kullanılmıyor)
     
-    private func savePendingLocationData() {
-        do {
-            let data = try JSONEncoder().encode(pendingLocationData)
-            UserDefaults.standard.set(data, forKey: pendingLocationKey)
-            print("💾 [LocationManager] Pending konum verileri kaydedildi: \(pendingLocationData.count) adet")
-        } catch {
-            print("❌ [LocationManager] Pending konum verileri kaydedilemedi: \(error)")
-        }
-    }
-    
-    private func loadPendingLocationData() {
-        guard let data = UserDefaults.standard.data(forKey: pendingLocationKey) else {
-            print("ℹ️ [LocationManager] Pending konum verisi bulunamadı")
-            return
-        }
-        
-        do {
-            pendingLocationData = try JSONDecoder().decode([LocationData].self, from: data)
-            print("📥 [LocationManager] Pending konum verileri yüklendi: \(pendingLocationData.count) adet")
-        } catch {
-            print("❌ [LocationManager] Pending konum verileri yüklenemedi: \(error)")
-            pendingLocationData = []
-        }
-    }
-    
-    private func clearPendingLocationData() {
-        pendingLocationData.removeAll()
-        UserDefaults.standard.removeObject(forKey: pendingLocationKey)
-        print("🗑️ [LocationManager] Pending konum verileri temizlendi")
-    }
-    
-    private func removeLocationDataFromPending(_ locationData: LocationData) {
-        if let index = pendingLocationData.firstIndex(where: { 
-            $0.timestamp == locationData.timestamp && 
-            $0.latitude == locationData.latitude && 
-            $0.longitude == locationData.longitude 
-        }) {
-            pendingLocationData.remove(at: index)
-            savePendingLocationData()
-            print("✅ [LocationManager] Konum verisi pending listesinden kaldırıldı")
-        }
-    }
-    
-    // Pending konum verilerini tekrar göndermeyi dene
-    func retryPendingLocationData() {
-        guard !pendingLocationData.isEmpty else {
-            print("ℹ️ [LocationManager] Gönderilecek pending konum verisi yok")
-            return
-        }
-        
-        print("🔄 [LocationManager] Pending konum verileri tekrar gönderiliyor: \(pendingLocationData.count) adet")
-        
-        for locationData in pendingLocationData {
-            sendLocationToAPI(locationData)
-        }
+    private func loadSmartFilteringSettings() {
+        let savedValue = UserDefaults.standard.bool(forKey: "smartFilteringEnabled")
+        isSmartFilteringEnabled = savedValue
+        print("🔧 [LocationManager] Smart filtering ayarı yüklendi: \(isSmartFilteringEnabled ? "Açık" : "Kapalı")")
     }
     
     private func updateAssignmentWorkStatus(status: String) {
@@ -727,14 +657,21 @@ class LocationManager: NSObject, ObservableObject {
         lastLocationUpdate = nil
         locationHistory.removeAll()
         
-        // Pending konum verilerini temizle
-        clearPendingLocationData()
+        // Buffer'ları temizle
+        locationBuffer.removeAll()
+        tempLocationBuffer.removeAll()
         
         // Location manager'ı durdur
         locationManager.stopUpdatingLocation()
         
         // Background monitoring'i durdur
         stopBackgroundMonitoring()
+        
+        // Konum toplama timer'ını durdur
+        stopLocationCollectionTimer()
+        
+        // Toplu konum gönderimi timer'ını durdur
+        stopBulkSendTimer()
         
         LogManager.shared.log("Location data temizlendi")
     }
@@ -901,6 +838,321 @@ class LocationManager: NSObject, ObservableObject {
         print("📝 [SmartFilter] Son gönderilen konum güncellendi")
     }
     
+    // MARK: - Toplu Konum Gönderimi
+    
+    /// Toplu konum gönderimi timer'ını başlatır
+    private func setupBulkSendTimer() {
+        bulkSendTimer = Timer.scheduledTimer(withTimeInterval: bulkSendInterval, repeats: true) { _ in
+            if self.isRouteTracking {
+                self.sendBulkLocations()
+            }
+        }
+        print("⏰ [LocationManager] Toplu konum gönderimi timer'ı kuruldu - \(bulkSendInterval) saniye aralık")
+    }
+    
+    /// Konum toplama timer'ını başlatır
+    private func setupLocationCollectionTimer() {
+        locationCollectionTimer = Timer.scheduledTimer(withTimeInterval: locationCollectionInterval, repeats: true) { _ in
+            if self.isRouteTracking, let location = self.currentLocation {
+                self.addLocationToBuffer(location)
+            }
+        }
+        print("⏰ [LocationManager] Konum toplama timer'ı kuruldu - \(locationCollectionInterval) saniye aralık")
+    }
+    
+    /// Toplu konum gönderimi timer'ını başlatır
+    private func startBulkSendTimer() {
+        bulkSendTimer?.invalidate()
+        bulkSendTimer = Timer.scheduledTimer(withTimeInterval: bulkSendInterval, repeats: true) { _ in
+            if self.isRouteTracking {
+                self.sendBulkLocations()
+            }
+        }
+        print("✅ [LocationManager] Toplu konum gönderimi timer'ı başlatıldı")
+    }
+    
+    /// Konum toplama timer'ını başlatır
+    private func startLocationCollectionTimer() {
+        locationCollectionTimer?.invalidate()
+        locationCollectionTimer = Timer.scheduledTimer(withTimeInterval: locationCollectionInterval, repeats: true) { _ in
+            if self.isRouteTracking, let location = self.currentLocation {
+                self.addLocationToBuffer(location)
+            }
+        }
+        print("✅ [LocationManager] Konum toplama timer'ı başlatıldı")
+    }
+    
+    /// Toplu konum gönderimi timer'ını durdurur
+    private func stopBulkSendTimer() {
+        bulkSendTimer?.invalidate()
+        bulkSendTimer = nil
+        print("🛑 [LocationManager] Toplu konum gönderimi timer'ı durduruldu")
+    }
+    
+    /// Konum toplama timer'ını durdurur
+    private func stopLocationCollectionTimer() {
+        locationCollectionTimer?.invalidate()
+        locationCollectionTimer = nil
+        print("🛑 [LocationManager] Konum toplama timer'ı durduruldu")
+    }
+    
+    /// Konumu buffer'a ekler (akıllı gruplandırma ile)
+    private func addLocationToBuffer(_ location: CLLocation) {
+        guard isRouteTracking,
+              let currentRoute = currentRoute else {
+            return
+        }
+        
+        let locationPoint = LocationPoint(
+            latitude: location.coordinate.latitude,
+            longitude: location.coordinate.longitude,
+            accuracy: location.horizontalAccuracy,
+            timestamp: Date(),
+            speed: location.speed,
+            heading: location.course,
+            distanceFromPrevious: calculateDistanceFromPrevious(),
+            totalDistance: calculateTotalDistance()
+        )
+        
+        // Akıllı gruplandırma uygula
+        if shouldGroupWithPreviousLocation(locationPoint) {
+            // Önceki konumla grupla
+            groupLocationWithPrevious(locationPoint)
+        } else {
+            // Yeni grup başlat
+            startNewLocationGroup(locationPoint)
+        }
+        
+        // Buffer boyutunu kontrol et
+        if locationBuffer.count >= maxBufferSize {
+            print("📦 [LocationManager] Buffer dolu (\(maxBufferSize) konum), hemen gönderiliyor")
+            sendBulkLocations()
+        }
+        
+        print("📦 [LocationManager] Konum işlendi - Buffer: \(locationBuffer.count), Temp: \(tempLocationBuffer.count)")
+    }
+    
+    // MARK: - Konum Gruplandırma Metodları
+    
+    /// Yeni konumun önceki konumla gruplandırılıp gruplandırılmayacağını belirler
+    private func shouldGroupWithPreviousLocation(_ newLocation: LocationPoint) -> Bool {
+        guard let lastLocation = tempLocationBuffer.last else {
+            return false // İlk konum, grup yok
+        }
+        
+        // 1. Mesafe kontrolü
+        let distance = calculateDistanceBetweenLocations(lastLocation, newLocation)
+        if distance > groupingDistanceThreshold {
+            print("🔍 [Grouping] Mesafe çok uzak (\(String(format: "%.1f", distance))m > \(groupingDistanceThreshold)m) - yeni grup")
+            return false
+        }
+        
+        // 2. Zaman kontrolü
+        let timeDifference = newLocation.timestamp.timeIntervalSince(lastLocation.timestamp)
+        if timeDifference > groupingTimeThreshold {
+            print("🔍 [Grouping] Zaman farkı çok büyük (\(String(format: "%.0f", timeDifference))s > \(groupingTimeThreshold)s) - yeni grup")
+            return false
+        }
+        
+        // 3. Hız kontrolü (hareket durumu)
+        let isLastLocationStopped = lastLocation.speed < minSpeedThreshold
+        let isNewLocationStopped = newLocation.speed < minSpeedThreshold
+        
+        // Eğer biri durmuş diğeri hareket halindeyse gruplama
+        if isLastLocationStopped != isNewLocationStopped {
+            print("🔍 [Grouping] Hareket durumu değişti (durma/hareket) - yeni grup")
+            return false
+        }
+        
+        // 4. Yön değişimi kontrolü (sadece hareket halindeyken)
+        if !isLastLocationStopped && !isNewLocationStopped {
+            let headingDifference = abs(newLocation.heading - lastLocation.heading)
+            if headingDifference > 45.0 { // 45 derece üzeri yön değişimi
+                print("🔍 [Grouping] Önemli yön değişimi (\(String(format: "%.1f", headingDifference))°) - yeni grup")
+                return false
+            }
+        }
+        
+        // 5. Hassasiyet kontrolü
+        if newLocation.accuracy > 50.0 { // 50 metre üzeri hassasiyet düşük
+            print("🔍 [Grouping] Düşük hassasiyet (\(String(format: "%.1f", newLocation.accuracy))m) - yeni grup")
+            return false
+        }
+        
+        print("✅ [Grouping] Konum gruplandırılabilir - mesafe: \(String(format: "%.1f", distance))m, zaman: \(String(format: "%.0f", timeDifference))s")
+        return true
+    }
+    
+    /// Yeni konumu önceki konumla gruplandırır
+    private func groupLocationWithPrevious(_ newLocation: LocationPoint) {
+        guard var lastLocation = tempLocationBuffer.last else {
+            startNewLocationGroup(newLocation)
+            return
+        }
+        
+        // Ortalama koordinatları hesapla
+        let avgLatitude = (lastLocation.latitude + newLocation.latitude) / 2.0
+        let avgLongitude = (lastLocation.longitude + newLocation.longitude) / 2.0
+        
+        // En iyi hassasiyeti seç
+        let bestAccuracy = min(lastLocation.accuracy, newLocation.accuracy)
+        
+        // En son zamanı kullan
+        let latestTimestamp = max(lastLocation.timestamp, newLocation.timestamp)
+        
+        // Ortalama hız ve yön
+        let avgSpeed = (lastLocation.speed + newLocation.speed) / 2.0
+        let avgHeading = calculateAverageHeading(lastLocation.heading, newLocation.heading)
+        
+        // Toplam mesafeyi güncelle
+        let totalDistance = lastLocation.totalDistance + newLocation.distanceFromPrevious
+        
+        // Gruplandırılmış konum oluştur
+        let groupedLocation = LocationPoint(
+            latitude: avgLatitude,
+            longitude: avgLongitude,
+            accuracy: bestAccuracy,
+            timestamp: latestTimestamp,
+            speed: avgSpeed,
+            heading: avgHeading,
+            distanceFromPrevious: lastLocation.distanceFromPrevious,
+            totalDistance: totalDistance
+        )
+        
+        // Son konumu güncelle
+        tempLocationBuffer[tempLocationBuffer.count - 1] = groupedLocation
+        
+        print("🔄 [Grouping] Konum gruplandırıldı - Temp buffer: \(tempLocationBuffer.count)")
+    }
+    
+    /// Yeni konum grubu başlatır
+    private func startNewLocationGroup(_ newLocation: LocationPoint) {
+        // Temp buffer'daki konumları ana buffer'a taşı
+        if !tempLocationBuffer.isEmpty {
+            locationBuffer.append(contentsOf: tempLocationBuffer)
+            print("📦 [Grouping] \(tempLocationBuffer.count) konum ana buffer'a taşındı")
+            tempLocationBuffer.removeAll()
+        }
+        
+        // Yeni konumu temp buffer'a ekle
+        tempLocationBuffer.append(newLocation)
+        print("🆕 [Grouping] Yeni grup başlatıldı - Temp buffer: \(tempLocationBuffer.count)")
+    }
+    
+    /// İki konum arasındaki mesafeyi hesaplar
+    private func calculateDistanceBetweenLocations(_ loc1: LocationPoint, _ loc2: LocationPoint) -> Double {
+        let location1 = CLLocation(latitude: loc1.latitude, longitude: loc1.longitude)
+        let location2 = CLLocation(latitude: loc2.latitude, longitude: loc2.longitude)
+        return location1.distance(from: location2)
+    }
+    
+    /// İki yönün ortalamasını hesaplar
+    private func calculateAverageHeading(_ heading1: Double, _ heading2: Double) -> Double {
+        // Yön farkını hesapla
+        var diff = heading2 - heading1
+        
+        // 180 derece üzerindeki farkları düzelt
+        if diff > 180 {
+            diff -= 360
+        } else if diff < -180 {
+            diff += 360
+        }
+        
+        // Ortalama hesapla
+        let avg = heading1 + diff / 2.0
+        
+        // 0-360 aralığına normalize et
+        return (avg + 360).truncatingRemainder(dividingBy: 360)
+    }
+    
+    /// Buffer'daki konumları toplu olarak gönderir
+    private func sendBulkLocations(status: String = "active") {
+        // Temp buffer'daki konumları ana buffer'a taşı
+        if !tempLocationBuffer.isEmpty {
+            locationBuffer.append(contentsOf: tempLocationBuffer)
+            print("📦 [Grouping] Son \(tempLocationBuffer.count) konum ana buffer'a taşındı")
+            tempLocationBuffer.removeAll()
+        }
+        
+        guard !locationBuffer.isEmpty,
+              let currentRoute = currentRoute else {
+            print("ℹ️ [LocationManager] Gönderilecek konum yok veya gerekli veriler eksik")
+            return
+        }
+        
+        print("📦 [LocationManager] Toplu konum gönderimi başlatılıyor - \(locationBuffer.count) konum")
+        
+        let bulkData = BulkLocationData(
+            routeId: currentRoute.routeId,
+            assignedPlanId: currentRoute.planId,
+            assignedScreenId: currentRoute.assignmentScreenId,
+            assignedEmployeeId: currentRoute.assignmentEmployeeId,
+            assignedScheduleId: currentRoute.id,
+            sessionDate: formatDateForAPI(Date()),
+            actualStartTime: trackingStartDate ?? Date(),
+            actualEndTime: Date(),
+            status: status,
+            batteryLevel: Double(UIDevice.current.batteryLevel),
+            signalStrength: getSignalStrength(),
+            actualDurationMin: calculateActualDuration(),
+            locations: locationBuffer
+        )
+        
+        // Buffer'ı temizle
+        locationBuffer.removeAll()
+        
+        // API'ye gönder
+        sendBulkLocationsToAPI(bulkData)
+    }
+    
+    /// Toplu konum verilerini API'ye gönderir
+    private func sendBulkLocationsToAPI(_ bulkData: BulkLocationData) {
+        guard let url = URL(string: AppConfig.API.baseURL + AppConfig.Endpoints.trackBulkRouteLocation) else {
+            LogManager.shared.log("Geçersiz bulk location URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(AppConfig.API.appToken, forHTTPHeaderField: "app_token")
+
+        do {
+            let jsonData = try JSONEncoder().encode(bulkData)
+            request.httpBody = jsonData
+            
+            LogManager.shared.log("Toplu konum gönderiliyor: \(bulkData.locations.count) konum")
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        print("❌ [LocationManager] Toplu konum gönderme hatası: \(error.localizedDescription)")
+                        LogManager.shared.log("Toplu konum gönderme hatası: \(error.localizedDescription)")
+                        return
+                    }
+                    
+                    if let httpResponse = response as? HTTPURLResponse {
+                        print("📡 [LocationManager] Toplu konum gönderme yanıtı: \(httpResponse.statusCode)")
+                        
+                        if httpResponse.statusCode == 200 {
+                            print("✅ [LocationManager] Toplu konum verisi başarıyla gönderildi")
+                            LogManager.shared.log("Toplu konum verisi başarıyla gönderildi - \(bulkData.locations.count) konum")
+                        } else {
+                            print("❌ [LocationManager] Toplu konum gönderilemedi - HTTP \(httpResponse.statusCode)")
+                            // Hata durumunda konumları tekrar buffer'a ekle
+                            self.locationBuffer.append(contentsOf: bulkData.locations)
+                        }
+                    }
+                }
+            }.resume()
+        } catch {
+            print("❌ [LocationManager] Toplu konum verisi encode hatası: \(error)")
+            LogManager.shared.log("Toplu konum verisi encode hatası: \(error)")
+            // Hata durumunda konumları tekrar buffer'a ekle
+            locationBuffer.append(contentsOf: bulkData.locations)
+        }
+    }
+    
     // MARK: - Route Completion Timer
     
     /// Rota tamamlama timer'ını başlatır
@@ -948,6 +1200,9 @@ class LocationManager: NSObject, ObservableObject {
     private func autoCompleteRoute() {
         print("⏰ [LocationManager] Rota zamanı doldu, otomatik tamamlama başlatılıyor")
         
+        // Buffer'daki konumları hemen gönder
+        sendBulkLocations(status: "completed")
+        
         DispatchQueue.main.async {
             // Work status'u completed olarak güncelle
             self.updateAssignmentWorkStatus(status: "completed")
@@ -962,6 +1217,12 @@ class LocationManager: NSObject, ObservableObject {
             
             // Background monitoring'i durdur
             self.stopBackgroundMonitoring()
+            
+            // Konum toplama timer'ını durdur
+            self.stopLocationCollectionTimer()
+            
+            // Toplu konum gönderimi timer'ını durdur
+            self.stopBulkSendTimer()
             
             // Timer'ı durdur
             self.stopRouteCompletionTimer()
@@ -1013,9 +1274,8 @@ extension LocationManager: CLLocationManagerDelegate {
             self.currentLocation = location
             self.locationHistory.append(location)
             
-            if self.isRouteTracking && self.activeScheduleId != nil {
-                self.sendLocationToServer()
-            }
+            // Konumları artık timer ile topluyoruz, burada eklemiyoruz
+            // Timer her 5 saniyede bir mevcut konumu buffer'a ekleyecek
         }
     }
     

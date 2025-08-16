@@ -8,7 +8,7 @@ struct ProfileView: View {
     @State private var showSupport = false
     @State private var showDeleteAlert = false
     @State private var showWorkStatusPicker = false
-
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -32,7 +32,6 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            // .toolbarBackground(Color.white, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -362,7 +361,7 @@ struct ProfileInfoRow: View {
     let icon: String
     let text: String
     var color: Color = .primary
-
+    
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
@@ -396,16 +395,55 @@ struct SupportView: View {
                         .padding(.top)
                     
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("SSS")
+                        Text("Sık Sorulan Sorular")
                             .font(.headline)
                             .foregroundColor(.white)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("• Rezervasyon nasıl yapılır?")
-                            Text("• Canlı takip nasıl çalışır?")
-                            Text("• Raporlar nereden görüntülenir?")
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• Teklif nasıl kabul edilir?")
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.9))
+                                Text("  Teklifler sayfasından gelen teklifleri inceleyip 'Kabul Et' butonuna basarak kabul edebilirsiniz.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• Rota takibi nasıl başlatılır?")
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.9))
+                                Text("  Kabul ettiğiniz rotalar 'Rotalarım' sayfasında görünür. Rota detayından 'Başlat' butonuna basarak takibi başlatabilirsiniz.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• Konum takibi nasıl çalışır?")
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.9))
+                                Text("  Rota başlatıldığında otomatik olarak konum takibi başlar. Her 5 saniyede konum alınır ve 30 saniyede bir sunucuya gönderilir.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• Rota nasıl tamamlanır?")
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.9))
+                                Text("  Rota süresi dolduğunda otomatik tamamlanır veya harita üzerindeki 'Tamamla' butonuna basarak manuel olarak tamamlayabilirsiniz.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("• Kazançlar nasıl görüntülenir?")
+                                    .font(.body)
+                                    .foregroundColor(.white.opacity(0.9))
+                                Text("  Ana sayfadaki istatistikler bölümünden günlük, haftalık ve toplam kazançlarınızı görebilirsiniz.")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.6))
+                            }
                         }
-                        .font(.body)
-                        .foregroundColor(.white.opacity(0.7))
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
@@ -417,7 +455,7 @@ struct SupportView: View {
                                     .stroke(Color.white.opacity(0.2), lineWidth: 1)
                             )
                     )
-
+                    
                     Button(action: {
                         // WhatsApp ile destek
                         if let url = URL(string: "https://wa.me/905426943496") {
@@ -441,7 +479,7 @@ struct SupportView: View {
                                 )
                         )
                     }
-
+                    
                     Button(role: .destructive) {
                         showDeleteAlert = true
                     } label: {
@@ -472,7 +510,7 @@ struct SupportView: View {
                             secondaryButton: .cancel()
                         )
                     }
-
+                    
                     Spacer()
                 }
                 .padding()
@@ -489,14 +527,6 @@ struct SupportView: View {
             }
         }
     }
-}
-
-
-#Preview {
-    ProfileView()
-        .environmentObject(NavigationManager.shared)
-        .environmentObject(SessionManager.shared)
-        .environmentObject(AppStateManager.shared)
 }
 
 // MARK: - Work Status Picker View
@@ -671,3 +701,11 @@ struct WorkStatusOptionRow: View {
         }
     }
 }
+
+#Preview {
+    ProfileView()
+        .environmentObject(NavigationManager.shared)
+        .environmentObject(SessionManager.shared)
+        .environmentObject(AppStateManager.shared)
+}
+

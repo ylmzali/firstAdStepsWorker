@@ -68,6 +68,8 @@ struct RouteTrackingView: View {
     @State private var totalDistance: Double = 0
     @State private var averageSpeed: Double = 0
     @State private var isRouteActive: Bool = false
+    // Rota zamanı kontrolü için timer
+    @State private var routeTimeCheckTimer: Timer? = nil
 
     var body: some View {
         ZStack {
@@ -107,6 +109,15 @@ struct RouteTrackingView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 80)
+                
+                // Work Time Display - KALDIRILDI
+                // HStack {
+                //     Spacer()
+                //     WorkTimeDisplay()
+                //     Spacer()
+                // }
+                // .padding(.horizontal, 24)
+                // .padding(.top, 8)
                 
                 HStack(spacing: 6) {
                     Spacer()
@@ -151,29 +162,26 @@ struct RouteTrackingView: View {
                         .disabled(!isRouteTimeActive() && !locationManager.isRouteTracking)
                     }
                     
-                    // Zaman bilgisi (debug için)
-                    if !isRouteTimeActive() {
-                        VStack {
-                            Text("Rota Zamanı:")
-                                .font(.system(size: 14, weight: .light))
-                            Text("\(route.formattedStartTime) - \(route.formattedEndTime)")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                        .foregroundColor(.white)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal)
-                        .background(Color.black.opacity(0.6))
-                        .cornerRadius(8)
-                        .disabled(!isRouteTimeActive() && !locationManager.isRouteTracking)
-                    }
+
                     
-                    // Rota Tamamla butonu (sadece çalışıyor durumunda göster)
-                    if locationManager.isRouteTracking && locationManager.activeScheduleId == route.id {
+                    // Rota Tamamla butonu (sadece zaman içindeyken ve tamamlanmamışken görünür)
+                    if isRouteTimeActive() && route.assignmentWorkStatus != .completed {
                         Button(action: {
-                            // Önce takibi durdur
-                            pauseTracking()
+                            print("🔴 [RouteTrackingView] Tamamla butonuna basıldı")
                             
-                            // Rota tamamlama işlemini başlat
+                            // UI state'lerini temizle
+                            DispatchQueue.main.async {
+                                if let last = lastResumeDate {
+                                    trackingElapsed += Date().timeIntervalSince(last)
+                                }
+                                lastResumeDate = nil
+                                isTracking = false
+                                isRouteActive = false
+                            }
+                            stopTrackingTimer()
+                            
+                            // Rota tamamlama işlemini başlat (paused göndermeden direkt completed)
+                            print("🔴 [RouteTrackingView] completeRouteTracking çağrılıyor")
                             locationManager.completeRouteTracking()
                             
                             // Kısa bir gecikme ile view'ı kapat
@@ -192,11 +200,51 @@ struct RouteTrackingView: View {
                             .background(Color.red)
                             .cornerRadius(8)
                         }
+                        .disabled(!locationManager.isRouteTracking || locationManager.activeScheduleId != route.id)
                     }
                     Spacer()
 
                 }
-                .padding()
+                .padding(.horizontal)
+
+                // --- Smart Filtering Setting ---
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "location.slash")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(Theme.gray600)
+                        
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text("Akıllı Konum Filtreleme")
+                                .font(.system(size: 14, weight: .medium))
+                                .fixedSize()
+                                .foregroundColor(Theme.gray600)
+                            
+                            HStack {
+                                Text(locationManager.smartFilteringEnabled ? "Açık" : "Kapalı")
+                                    .fixedSize()
+                                    .font(.system(size: 14))
+                                    .bold()
+                                    .foregroundColor(locationManager.smartFilteringEnabled ? Color.green : Theme.gray600)
+                                Text(locationManager.smartFilteringEnabled ? "Daha az veri gönderir" : "Tüm konumlar gönderilir")
+                                    .fixedSize()
+                                    .font(.system(size: 10))
+                                    .foregroundColor(Theme.gray600)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: $locationManager.smartFilteringEnabled)
+                            .toggleStyle(SwitchToggleStyle(tint: .green))
+                            .scaleEffect(0.8)
+                    }
+                    .padding(12)
+                    .background(Color.white.opacity(0.9))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                }
+                .padding(.horizontal)
 
                 // --- Progress Bars ---
                 VStack(alignment: .leading, spacing: 18) {
@@ -275,6 +323,7 @@ struct RouteTrackingView: View {
                 
                 // UI timer'ını durdur (performans için)
                 stopTrackingTimer()
+                stopRouteTimeCheckTimer()
                 
             }
 
@@ -546,9 +595,13 @@ struct RouteTrackingView: View {
         Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             now = Date()
         }
+        
+        // Rota zamanı kontrolü için timer başlat
+        startRouteTimeCheckTimer()
     }
     private func stopNowTimer() {
         // No-op, timer is not retained
+        stopRouteTimeCheckTimer()
     }
     private func startTrackingTimer() {
         stopTrackingTimer()
@@ -567,6 +620,53 @@ struct RouteTrackingView: View {
         DispatchQueue.main.async {
             trackingTimer?.invalidate()
             trackingTimer = nil
+        }
+    }
+    
+    // Rota zamanı kontrolü için timer fonksiyonları
+    private func startRouteTimeCheckTimer() {
+        stopRouteTimeCheckTimer()
+        
+        DispatchQueue.main.async {
+            self.routeTimeCheckTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { _ in
+                self.checkRouteTimeAndAutoComplete()
+            }
+        }
+    }
+    
+    private func stopRouteTimeCheckTimer() {
+        DispatchQueue.main.async {
+            routeTimeCheckTimer?.invalidate()
+            routeTimeCheckTimer = nil
+        }
+    }
+    
+    private func checkRouteTimeAndAutoComplete() {
+        // Eğer rota takibi aktifse ve zaman dışındaysa otomatik tamamla
+        if locationManager.isRouteTracking && 
+           locationManager.activeScheduleId == route.id && 
+           !isRouteTimeActive() {
+            
+            print("⏰ [RouteTrackingView] Rota zamanı doldu, otomatik tamamlama başlatılıyor")
+            
+            // UI state'lerini temizle
+            DispatchQueue.main.async {
+                if let last = lastResumeDate {
+                    trackingElapsed += Date().timeIntervalSince(last)
+                }
+                lastResumeDate = nil
+                isTracking = false
+                isRouteActive = false
+            }
+            stopTrackingTimer()
+            
+            // Rota tamamlama işlemini başlat
+            locationManager.completeRouteTracking()
+            
+            // Kısa bir gecikme ile view'ı kapat
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                dismiss()
+            }
         }
     }
 
@@ -704,9 +804,11 @@ struct RouteTrackingView: View {
 
     private func getButtonText() -> String {
         
-        // LocationManager'daki mevcut durumu kontrol et
-        if locationManager.isRouteTracking && locationManager.activeScheduleId == route.id {
-            return "Duraklat"
+        // Rota durumunu kontrol et
+        if route.workStatus == "completed" {
+            return "Tamamlandı"
+        } else if locationManager.isRouteTracking && locationManager.activeScheduleId == route.id {
+            return "Durdur"
         } else {
             // Rota zamanı kontrolü
             if isRouteTimeActive() {
@@ -719,8 +821,10 @@ struct RouteTrackingView: View {
 
     private func getButtonColor() -> Color {
         
-        // LocationManager'daki mevcut durumu kontrol et
-        if locationManager.isRouteTracking && locationManager.activeScheduleId == route.id {
+        // Rota durumunu kontrol et
+        if route.workStatus == "completed" {
+            return Color.gray
+        } else if locationManager.isRouteTracking && locationManager.activeScheduleId == route.id {
             return Color.orange
         } else {
             // Rota zamanı kontrolü
@@ -776,11 +880,12 @@ struct CLUserLocationAnnotation: Identifiable {
     let coordinate: CLLocationCoordinate2D
 }
 
-// Çalışan Rota Detay Sayfası
+// Modern Rota Detay Sayfası
 struct RouteInfoSheet: View {
     let route: Assignment
     @Environment(\.dismiss) private var dismiss
     @State private var showEmergencyContact = false
+    @State private var showMapOptions = false
     
     // Rota istatistikleri için parametreler
     let totalDistance: Double
@@ -789,101 +894,201 @@ struct RouteInfoSheet: View {
     let routeLocations: [LocationData]
     
     var body: some View {
+        NavigationView {
         ScrollView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 16) {
-                    Capsule()
-                        .frame(width: 40, height: 6)
-                        .foregroundColor(.gray.opacity(0.2))
-                        .padding(.top, 8)
+                LazyVStack(spacing: 0) {
+                    // Hero Section - Header
+                    heroSection
                     
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Çalışma Detayları")
-                                .font(.title2.bold())
-                            Text("Rota #\(route.id)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        AssignmentStatusBadge(status: route.assignmentStatus)
+                    // Overview Section - Genel Bilgiler
+                    overviewSection
+                    
+                    // Status Section - Durum ve İlerleme
+                    statusSection
+                    
+                    // Location Section - Konum Bilgileri
+                    locationSection
+                    
+                    // Map Section - Harita Görüntüsü
+                    mapSection
+                    
+                    // Statistics Section - İstatistikler (Aktif rota için)
+                    if isRouteActive {
+                        statisticsSection
+                    }
+                    
+                    // Actions Section - Hızlı Aksiyonlar
+                    actionsSection
+                    
+                    // Bottom Spacing
+                    Color.clear.frame(height: 100)
+                }
+            }
+            .background(Color(.systemGroupedBackground))
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Kapat") {
+                        dismiss()
+                    }
+                                .foregroundColor(.blue)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    AssignmentStatusBadge(status: route.assignmentStatus)
+                }
+            }
+            .alert("Acil Durum İletişimi", isPresented: $showEmergencyContact) {
+                Button("Acil Servis (112)") {
+                    if let emergencyUrl = URL(string: "tel:112") {
+                        UIApplication.shared.open(emergencyUrl)
                     }
                 }
-                .padding()
+                Button("Güvenlik (155)") {
+                    if let securityUrl = URL(string: "tel:155") {
+                        UIApplication.shared.open(securityUrl)
+                    }
+                }
+                Button("İptal", role: .cancel) { }
+            } message: {
+                Text("Acil durumda hangi servisi aramak istiyorsunuz?")
+            }
+        }
+    }
+    
+    // MARK: - Hero Section
+    private var heroSection: some View {
+        VStack(spacing: 16) {
+            // Rota ID ve Başlık
+            VStack(spacing: 8) {
+                Text("Rota #\(route.id)")
+                    .font(.title2.bold())
+                    .foregroundColor(.primary)
                 
-                // Ana Bilgiler
-                VStack(spacing: 24) {
-                    // Görev Açıklaması
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "list.bullet.clipboard")
-                                .foregroundColor(.blue)
-                            Text("Görev Detayları")
-                                .font(.headline)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 16) {
                             Text(route.assignmentOfferDescription ?? "Görev açıklaması bulunmuyor")
                                 .font(.body)
-                                .padding()
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(12)
-                            
-                            HStack {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Label(route.formattedTurkishDate, systemImage: "calendar")
-                                        .font(.subheadline.bold())
-                                    Text("Çalışma Tarihi")
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(3)
+            }
+            
+            // Tarih ve Saat Bilgileri
+            HStack(spacing: 24) {
+                VStack(spacing: 4) {
+                    Image(systemName: "calendar")
+                        .font(.title2)
+                        .foregroundColor(.blue)
+                    Text(route.formattedTurkishDate)
+                        .font(.caption.bold())
+                    Text("Tarih")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
-                                Spacer()
-                                VStack(alignment: .trailing, spacing: 6) {
-                                    Label("\(route.formattedStartTime) - \(route.formattedEndTime)", systemImage: "clock")
-                                        .font(.subheadline.bold())
-                                    Text("Çalışma Saatleri")
+                
+                VStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.title2)
+                        .foregroundColor(.green)
+                    Text("\(route.formattedStartTime)")
+                        .font(.caption.bold())
+                    Text("Başlangıç")
                                         .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
-                            }
-                        }
-                    }
-                    
-                                        Divider()
-                    
-                    // Çalışma Durumu
-                    VStack(alignment: .leading, spacing: 12) {
+                
+                VStack(spacing: 4) {
+                    Image(systemName: "clock.fill")
+                        .font(.title2)
+                        .foregroundColor(.red)
+                    Text("\(route.formattedEndTime)")
+                        .font(.caption.bold())
+                    Text("Bitiş")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemBackground))
+    }
+    
+    // MARK: - Overview Section
+    private var overviewSection: some View {
+        VStack(spacing: 16) {
+            sectionHeader(title: "Genel Bilgiler", icon: "info.circle", color: .blue)
+            
+            VStack(spacing: 12) {
+                // Kazanç Kartı
                         HStack {
-                            Image(systemName: "chart.bar.fill")
-                                .foregroundColor(.orange)
-                            Text("Çalışma Durumu")
-                                .font(.headline)
-                        }
-                        
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Kazanç")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("₺\(route.assignmentOfferBudget)")
+                            .font(.title2.bold())
+                            .foregroundColor(.green)
+                    }
+                    Spacer()
+                    Image(systemName: "banknote")
+                        .font(.title2)
+                        .foregroundColor(.green)
+                }
+                .padding(16)
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Rota Tipi ve Alan
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Rota Tipi")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text(route.routeType)
+                            .font(.subheadline.bold())
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Çalışma Alanı")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(route.radiusMeters)m")
+                            .font(.subheadline.bold())
+                    }
+                }
+                .padding(16)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Status Section
+    private var statusSection: some View {
                         VStack(spacing: 16) {
+            sectionHeader(title: "Durum ve İlerleme", icon: "chart.bar.fill", color: .orange)
+            
+            VStack(spacing: 12) {
                             // Durum Kartı
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
+                        Text("Mevcut Durum")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                                     Text(route.assignmentStatus.statusDescription)
                                         .font(.subheadline.bold())
                                         .foregroundColor(route.assignmentStatus.statusColor)
-                                    Text("Mevcut Durum")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
                                 }
                                 Spacer()
-                                VStack(alignment: .trailing, spacing: 4) {
-                                    Text("₺\(route.assignmentOfferBudget)")
-                                        .font(.title3.bold())
-                                        .foregroundColor(.green)
-                                    Text("Kazanç")
-                                        .font(.caption2)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
+                    Image(systemName: route.assignmentStatus.icon)
+                        .font(.title2)
+                        .foregroundColor(route.assignmentStatus.statusColor)
+                }
+                .padding(16)
+                .background(route.assignmentStatus.statusColor.opacity(0.1))
                             .cornerRadius(12)
                             
                             // İlerleme Çubuğu
@@ -903,143 +1108,154 @@ struct RouteInfoSheet: View {
                                     .frame(height: 8)
                                     .clipShape(Capsule())
                             }
-                        }
-                    }
-                    
-                                        Divider()
-                    
-                    // Konum Bilgileri
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "location.fill")
-                                .foregroundColor(.red)
-                            Text("Konum Bilgileri")
-                                .font(.headline)
-                        }
+                .padding(16)
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Location Section
+    private var locationSection: some View {
+        VStack(spacing: 16) {
+            sectionHeader(title: "Konum Bilgileri", icon: "location.fill", color: .red)
                         
                         VStack(spacing: 12) {
+                // Başlangıç Noktası
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Başlangıç Noktası")
-                                        .font(.subheadline.bold())
-                                    Text("\(route.startLat), \(route.startLng)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                        Text("\(route.startLat), \(route.startLng)")
+                            .font(.subheadline.bold())
                                 }
                                 Spacer()
-                                VStack(alignment: .trailing, spacing: 4) {
-                                    Text("Bitiş Noktası")
-                                        .font(.subheadline.bold())
-                                    Text("\(route.endLat), \(route.endLng)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            
+                    Image(systemName: "mappin.circle")
+                        .font(.title2)
+                        .foregroundColor(.red)
+                }
+                .padding(16)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(12)
+                
+                // Bitiş Noktası
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Çalışma Alanı")
-                                        .font(.subheadline.bold())
-                                    Text("\(route.radiusMeters) metre yarıçap")
+                        Text("Bitiş Noktası")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                        Text("\(route.endLat), \(route.endLng)")
+                            .font(.subheadline.bold())
                                 }
                                 Spacer()
-                                VStack(alignment: .trailing, spacing: 4) {
-                                    Text("Rota Tipi")
-                                        .font(.subheadline.bold())
-                                    Text(route.routeType)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding()
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.red)
+                }
+                .padding(16)
                         .background(Color.red.opacity(0.1))
                         .cornerRadius(12)
                     }
-                    
-                    Divider()
-                    
-                    // Rota İstatistikleri (Sadece aktif rota için)
-                    if isRouteActive {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "chart.line.uptrend.xyaxis")
-                                    .foregroundColor(.green)
-                                Text("Rota İstatistikleri")
-                                    .font(.headline)
-                            }
-                            
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Statistics Section
+    private var statisticsSection: some View {
                             VStack(spacing: 16) {
+            sectionHeader(title: "Canlı İstatistikler", icon: "chart.line.uptrend.xyaxis", color: .green)
+            
+            VStack(spacing: 12) {
                                 // İstatistik Kartları
-                                HStack(spacing: 16) {
+                LazyVGrid(columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible())
+                ], spacing: 12) {
                                     // Toplam Mesafe
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(String(format: "%.2f km", totalDistance))
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "figure.walk")
+                                .foregroundColor(.blue)
+                            Spacer()
+                            Text(String(format: "%.2f", totalDistance))
                                             .font(.title3.bold())
                                             .foregroundColor(.blue)
+                        }
+                        Text("km")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                                         Text("Toplam Mesafe")
                                             .font(.caption2)
                                             .foregroundColor(.secondary)
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
+                    .padding(16)
                                     .background(Color.blue.opacity(0.1))
                                     .cornerRadius(12)
                                     
                                     // Ortalama Hız
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(String(format: "%.1f km/h", averageSpeed))
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "speedometer")
+                                .foregroundColor(.green)
+                            Spacer()
+                            Text(String(format: "%.1f", averageSpeed))
                                             .font(.title3.bold())
                                             .foregroundColor(.green)
+                        }
+                        Text("km/h")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                                         Text("Ortalama Hız")
                                             .font(.caption2)
                                             .foregroundColor(.secondary)
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
+                    .padding(16)
                                     .background(Color.green.opacity(0.1))
                                     .cornerRadius(12)
                                 }
                                 
-                                // Konum Sayısı
+                // Konum Kayıtları
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
+                        Text("Konum Kaydı")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                                         Text("\(routeLocations.count)")
                                             .font(.title3.bold())
                                             .foregroundColor(.orange)
-                                        Text("Konum Kaydı")
-                                            .font(.caption2)
-                                            .foregroundColor(.secondary)
                                     }
                                     Spacer()
                                     VStack(alignment: .trailing, spacing: 4) {
                                         Text("Canlı Takip")
                                             .font(.subheadline.bold())
                                             .foregroundColor(.green)
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 6, height: 6)
                                         Text("Aktif")
                                             .font(.caption2)
                                             .foregroundColor(.green)
                                     }
                                 }
-                                .padding()
+                }
+                .padding(16)
                                 .background(Color.orange.opacity(0.1))
                                 .cornerRadius(12)
                             }
                         }
-                        
-                        Divider()
-                    }
-                    
-                    // Hızlı Aksiyonlar
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Image(systemName: "bolt.fill")
-                                .foregroundColor(.yellow)
-                            Text("Hızlı Aksiyonlar")
-                                .font(.headline)
-                        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Actions Section
+    private var actionsSection: some View {
+        VStack(spacing: 16) {
+            sectionHeader(title: "Hızlı Aksiyonlar", icon: "bolt.fill", color: .yellow)
                         
                         VStack(spacing: 12) {
                             // Acil Durum Butonu
@@ -1049,19 +1265,19 @@ struct RouteInfoSheet: View {
                                 HStack {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                     Text("Acil Durum İletişimi")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
                                 }
                                 .font(.subheadline)
                                 .foregroundColor(.white)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
-                                .frame(maxWidth: .infinity)
+                    .padding(16)
                                 .background(Color.red)
-                                .cornerRadius(8)
+                    .cornerRadius(12)
                             }
                             
                             // Çalışma Raporu
                             Button(action: {
-                                // Çalışma raporu oluştur
                                 let reportText = """
                                 📋 Çalışma Raporu
                                 
@@ -1077,26 +1293,25 @@ struct RouteInfoSheet: View {
                                 """
                                 
                                 UIPasteboard.general.string = reportText
-                                
                                 let generator = UINotificationFeedbackGenerator()
                                     generator.notificationOccurred(.success)
                             }) {
                                 HStack {
                                     Image(systemName: "doc.text.fill")
                                     Text("Çalışma Raporu Oluştur")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
                                 }
                                 .font(.subheadline)
                                 .foregroundColor(.blue)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
-                                .frame(maxWidth: .infinity)
+                    .padding(16)
                                 .background(Color.blue.opacity(0.1))
-                                .cornerRadius(8)
+                    .cornerRadius(12)
                             }
                             
-                            // Destek İste
+                // Destek Ara
                             Button(action: {
-                                // Destek ekranını aç
                                 if let supportUrl = URL(string: "tel:08502222222") {
                                     UIApplication.shared.open(supportUrl)
                                 }
@@ -1104,56 +1319,174 @@ struct RouteInfoSheet: View {
                                 HStack {
                                     Image(systemName: "phone.fill")
                                     Text("Destek Ara")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
                                 }
                                 .font(.subheadline)
                                 .foregroundColor(.green)
-                                .padding(.vertical, 12)
-                                .padding(.horizontal, 16)
-                                .frame(maxWidth: .infinity)
+                    .padding(16)
                                 .background(Color.green.opacity(0.1))
-                                .cornerRadius(8)
+                    .cornerRadius(12)
                             }
                         }
                     }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
                 }
-                .padding(.horizontal)
                 
-                Spacer()
+    // MARK: - Map Section
+    private var mapSection: some View {
+        VStack(spacing: 16) {
+            sectionHeader(title: "Rota Haritası", icon: "map.fill", color: .blue)
                 
-                // Kapat Butonu
+            VStack(spacing: 12) {
+                // Harita Görüntüsü
+                if let mapUrl = route.mapSnapshotUrl {
                 Button(action: {
-                    dismiss()
-                }) {
-                    Text("Kapat")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.vertical, 16)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
+                        showMapOptions = true
+                    }) {
+                        AsyncImage(url: URL(string: "https://buisyurur.com\(mapUrl)")) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
                         .cornerRadius(12)
+                        } placeholder: {
+                            Rectangle()
+                                .fill(Color(.systemGray5))
+                                .aspectRatio(16/9, contentMode: .fit)
+                                .overlay(
+                                    VStack(spacing: 12) {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .blue))
+                                        Text("Harita yükleniyor...")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                    }
+                                )
+                                .cornerRadius(12)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                } else {
+                    Button(action: {
+                        showMapOptions = true
+                    }) {
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .aspectRatio(16/9, contentMode: .fit)
+                            .overlay(
+                                VStack(spacing: 8) {
+                                    Image(systemName: "map")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(.gray)
+                                    Text("Harita görüntüsü yok")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                            )
+                            .cornerRadius(12)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
-                .padding(.horizontal)
+                
+                // Harita Aksiyonları
+                HStack(spacing: 12) {
+                    Button(action: {
+                        openInAppleMaps()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "map")
+                            Text("Apple Maps")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    
+                    Button(action: {
+                        openInGoogleMaps()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "map")
+                            Text("Google Maps")
+                        }
+                        .font(.subheadline)
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    
+                    Spacer()
+                }
             }
         }
-        .alert("Acil Durum İletişimi", isPresented: $showEmergencyContact) {
-            Button("Acil Servis (112)") {
-                if let emergencyUrl = URL(string: "tel:112") {
-                    UIApplication.shared.open(emergencyUrl)
-                }
-            }
-            Button("Güvenlik (155)") {
-                if let securityUrl = URL(string: "tel:155") {
-                    UIApplication.shared.open(securityUrl)
-                }
-            }
-            Button("İptal", role: .cancel) { }
-        } message: {
-            Text("Acil durumda hangi servisi aramak istiyorsunuz?")
-        }
-
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
     
-    // İlerleme hesaplama fonksiyonları
+    // MARK: - Map Functions
+    private func openInAppleMaps() {
+        if route.routeType == "fixed_route" {
+            // Sabit rota: Başlangıç noktasını aç
+            if let url = URL(string: "http://maps.apple.com/?q=\(route.startLat),\(route.startLng)") {
+                UIApplication.shared.open(url)
+            }
+        } else {
+            // Alan rota: Merkez noktasını aç
+            if let url = URL(string: "http://maps.apple.com/?q=\(route.centerLat),\(route.centerLng)") {
+                UIApplication.shared.open(url)
+            }
+        }
+    }
+    
+    private func openInGoogleMaps() {
+        if route.routeType == "fixed_route" {
+            // Sabit rota: Başlangıç noktasını aç
+            if let url = URL(string: "comgooglemaps://?q=\(route.startLat),\(route.startLng)") {
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else {
+                    if let webUrl = URL(string: "https://maps.google.com/?q=\(route.startLat),\(route.startLng)") {
+                        UIApplication.shared.open(webUrl)
+                    }
+                }
+            }
+        } else {
+            // Alan rota: Merkez noktasını aç
+            if let url = URL(string: "comgooglemaps://?q=\(route.centerLat),\(route.centerLng)") {
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else {
+                    if let webUrl = URL(string: "https://maps.google.com/?q=\(route.centerLat),\(route.centerLng)") {
+                        UIApplication.shared.open(webUrl)
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Helper Views
+    private func sectionHeader(title: String, icon: String, color: Color) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.primary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+    }
+    
+    // MARK: - Helper Functions
     private func calculateProgressValue() -> Double {
         guard let start = getRouteStartDate(), let end = getRouteEndDate() else { return 0 }
         let total = end.timeIntervalSince(start)
@@ -1166,49 +1499,20 @@ struct RouteInfoSheet: View {
         return Int(calculateProgressValue() * 100)
     }
     
-    // Tarih hesaplama fonksiyonları
     private func getRouteStartDate() -> Date? {
         let dateString = route.scheduleDate + " " + route.startTime
-        
-        // Türkiye saati olarak parse et (UTC dönüşümü yok)
         let localFormatter = DateFormatter()
         localFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         localFormatter.timeZone = AppConfig.Timezone.getCurrentTimeZone()
-        
-        guard let localDate = localFormatter.date(from: dateString) else {
-            return nil
-        }
-        
-        return localDate
+        return localFormatter.date(from: dateString)
     }
     
     private func getRouteEndDate() -> Date? {
         let dateString = route.scheduleDate + " " + route.endTime
-        
-        // 24:00:00 formatını kontrol et
-        var modifiedDateString = dateString
-        var is24HourFormat = false
-        if dateString.contains("24:00:00") {
-            modifiedDateString = dateString.replacingOccurrences(of: "24:00:00", with: "23:59:59")
-            is24HourFormat = true
-        }
-        
-        // Türkiye saati olarak parse et (UTC dönüşümü yok)
         let localFormatter = DateFormatter()
         localFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         localFormatter.timeZone = AppConfig.Timezone.getCurrentTimeZone()
-        
-        guard let localDate = localFormatter.date(from: modifiedDateString) else {
-            return nil
-        }
-        
-        // Eğer 24:00:00 ise, 1 saniye ekle (aynı günün sonu)
-        var finalDate = localDate
-        if is24HourFormat {
-            finalDate = localDate.addingTimeInterval(1)
-        }
-        
-        return finalDate
+        return localFormatter.date(from: dateString)
     }
 }
 

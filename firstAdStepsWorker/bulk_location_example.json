@@ -1,0 +1,46 @@
+{
+  "route_id": "27",
+  "assigned_plan_id": "26",
+  "assigned_screen_id": "1",
+  "assigned_employee_id": "7",
+  "assigned_schedule_id": "51",
+  "session_date": "2025-08-01T13:31:06+03:00",
+  "actual_start_time": 775737066.510677,
+  "actual_end_time": 775737066.569766,
+  "status": "active",
+  "battery_level": -1,
+  "signal_strength": 4,
+  "actual_duration_min": 0,
+  "locations": [
+    {
+      "latitude": 41.00137470763681,
+      "longitude": 28.509625313613412,
+      "accuracy": 12.830529032814193,
+      "timestamp": 775737066.569455,
+      "speed": -1,
+      "heading": -1,
+      "distance_from_previous": 0,
+      "total_distance": 0
+    },
+    {
+      "latitude": 41.00137470763682,
+      "longitude": 28.509625313613413,
+      "accuracy": 12.830529032814194,
+      "timestamp": 775737066.569456,
+      "speed": -1,
+      "heading": -1,
+      "distance_from_previous": 15.2,
+      "total_distance": 15.2
+    },
+    {
+      "latitude": 41.00137470763683,
+      "longitude": 28.509625313613414,
+      "accuracy": 12.830529032814195,
+      "timestamp": 775737066.569457,
+      "speed": -1,
+      "heading": -1,
+      "distance_from_previous": 12.8,
+      "total_distance": 28.0
+    }
+  ]
+}

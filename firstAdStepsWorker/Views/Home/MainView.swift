@@ -3,16 +3,89 @@ import SwiftUI
 struct MainView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     @StateObject private var routeViewModel = RouteViewModel()
+    // @StateObject private var workerStatsService = WorkerStatsService.shared // Geçici olarak devre dışı
     @State private var currentTime = Date()
-    @State private var todayRoutes = 5
-    @State private var completedRoutes = 3
-    @State private var pendingRoutes = 2
-    @State private var totalEarnings = 1250.0
     @State private var selectedAssignment: Assignment?
     @State private var isLoadingPendingAssignments = false
     @State private var showNotifications = false
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    // Geçici istatistikler (API entegrasyonu sonrası gerçek verilerle değiştirilecek)
+    private var todayRoutes: Int {
+        let today = Date()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let todayString = dateFormatter.string(from: today)
+        
+        let todayAssignments = routeViewModel.assignments.filter { assignment in
+            // Assignment'ın bugün planlandığını kontrol et (scheduleDate)
+            return assignment.scheduleDate == todayString
+        }.count
+        
+        return todayAssignments
+    }
+    
+    private var completedRoutes: Int {
+        let completedAssignments = routeViewModel.assignments.filter { assignment in
+            assignment.assignmentWorkStatus == .completed
+        }.count
+        
+        return completedAssignments
+    }
+    
+    private var pendingRoutes: Int {
+        return routeViewModel.pendingAssignments.count
+    }
+    
+    private var activeRoutes: Int {
+        // Aktif rotaları hesapla (çalışan ve duraklatılan rotalar)
+        let activeAssignments = routeViewModel.assignments.filter { assignment in
+            assignment.assignmentWorkStatus == .working || assignment.assignmentWorkStatus == .paused
+        }.count
+        
+        return activeAssignments
+    }
+    
+    private var totalEarnings: Double {
+        return 1250.0 // Geçici değer
+    }
+    
+    private var todayEarnings: Double {
+        return 450.0 // Geçici değer
+    }
+    
+    private var weeklyEarnings: Double {
+        return 850.0 // Geçici değer
+    }
+    
+    private var totalDistance: Double {
+        return 45.2 // Geçici değer
+    }
+    
+    private var averageSpeed: Double {
+        return 3.2 // Geçici değer
+    }
+    
+    private var maxSpeed: Double {
+        return 8.5 // Geçici değer
+    }
+    
+    private var totalWorkHours: Double {
+        return 24.5 // Geçici değer
+    }
+    
+    private var averagePerHour: Double {
+        return 51.02 // Geçici değer
+    }
+    
+    private var averageBattery: Double {
+        return 78.5 // Geçici değer
+    }
+    
+    private var averageSignal: Double {
+        return 4.2 // Geçici değer
+    }
     
     var body: some View {
             ScrollView {
@@ -31,6 +104,12 @@ struct MainView: View {
 
                     // Günlük Özet Kartları
                     dailySummaryCards
+                    
+                    // Detaylı İstatistikler
+                    detailedStatsSection
+                    
+                    // Cihaz İstatistikleri
+                    deviceStatsSection
                     
                     // Hızlı Erişim
                     // quickAccessSection
@@ -98,23 +177,24 @@ struct MainView: View {
                 }
             }
             
-            // Bugünün tarihi
-            Text(dateString)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Zaman bilgisi
+            HStack {
+                Image(systemName: "clock")
+                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+                
+                Text(timeString)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text(dateString)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
         }
-        .padding(20)
-        /*
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.blue.opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                )
-        )
-         */
     }
     
     private var dailySummaryCards: some View {
@@ -126,34 +206,261 @@ struct MainView: View {
             StatCard(
                 title: "Bugünkü Rotalar",
                 value: "\(todayRoutes)",
+                subtitle: "Toplam atanan",
                 icon: "map",
                 color: Theme.purple400
+            )
+            
+            // Aktif Rotalar
+            StatCard(
+                title: "Aktif Rotalar",
+                value: "\(activeRoutes)",
+                subtitle: "Şu anda çalışan",
+                icon: "location.fill",
+                color: Theme.success
             )
             
             // Tamamlanan Rotalar
             StatCard(
                 title: "Tamamlanan",
                 value: "\(completedRoutes)",
+                subtitle: "Toplam tamamlanan",
                 icon: "checkmark.circle",
-                color: Theme.success
+                color: Theme.green400
             )
             
             // Bekleyen Rotalar
             StatCard(
                 title: "Bekleyen",
                 value: "\(pendingRoutes)",
+                subtitle: "Onay bekleyen",
                 icon: "clock",
                 color: Theme.warning
             )
-            
-            // Günlük Kazanç
-            StatCard(
-                title: "Günlük Kazanç",
-                value: "₺\(Int(totalEarnings))",
-                icon: "banknote",
-                color: Theme.accentPink
-            )
         }
+    }
+    
+    private var detailedStatsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Detaylı İstatistikler")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 16) {
+                // Günlük Kazanç
+                StatCard(
+                    title: "Günlük Kazanç",
+                    value: "₺\(Int(todayEarnings))",
+                    subtitle: "Bugün kazanılan",
+                    icon: "banknote",
+                    color: Theme.accentPink
+                )
+                
+                // Haftalık Kazanç
+                StatCard(
+                    title: "Haftalık Kazanç",
+                    value: "₺\(Int(weeklyEarnings))",
+                    subtitle: "Bu hafta kazanılan",
+                    icon: "chart.line.uptrend.xyaxis",
+                    color: Theme.accentYellow
+                )
+                
+                // Toplam Kazanç
+                StatCard(
+                    title: "Toplam Kazanç",
+                    value: "₺\(Int(totalEarnings))",
+                    subtitle: "Tüm zamanlar",
+                    icon: "creditcard",
+                    color: Theme.primary
+                )
+                
+                // Saatlik Ortalama
+                StatCard(
+                    title: "Saatlik Ortalama",
+                    value: "₺\(Int(averagePerHour))",
+                    subtitle: "Saat başına kazanç",
+                    icon: "clock.arrow.circlepath",
+                    color: Theme.green400
+                )
+                
+                // Toplam Mesafe
+                StatCard(
+                    title: "Toplam Mesafe",
+                    value: "\(Int(totalDistance)) km",
+                    subtitle: "Kat edilen mesafe",
+                    icon: "speedometer",
+                    color: Theme.blue400
+                )
+                
+                // Ortalama Hız
+                StatCard(
+                    title: "Ortalama Hız",
+                    value: "\(Int(averageSpeed)) km/h",
+                    subtitle: "Ortalama seyahat hızı",
+                    icon: "gauge",
+                    color: Theme.orange400
+                )
+                
+                // Maksimum Hız
+                StatCard(
+                    title: "Maksimum Hız",
+                    value: "\(Int(maxSpeed)) km/h",
+                    subtitle: "En yüksek hız",
+                    icon: "speedometer",
+                    color: Theme.red400
+                )
+                
+                // Toplam Çalışma Saati
+                StatCard(
+                    title: "Toplam Çalışma",
+                    value: "\(Int(totalWorkHours)) saat",
+                    subtitle: "Toplam çalışma süresi",
+                    icon: "clock",
+                    color: Theme.purple400
+                )
+            }
+        }
+    }
+    
+    private var statsLoadingSection: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.2)
+                .progressViewStyle(CircularProgressViewStyle(tint: Theme.primary))
+            
+            Text("İstatistikler yükleniyor...")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Text("Çalışan performans verileri getiriliyor")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+    
+    private var deviceStatsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Cihaz İstatistikleri")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 16) {
+                // Ortalama Batarya
+                StatCard(
+                    title: "Ortalama Batarya",
+                    value: "\(Int(averageBattery))%",
+                    subtitle: "Cihaz batarya seviyesi",
+                    icon: "battery.75",
+                    color: Theme.green400
+                )
+                
+                // Ortalama Sinyal
+                StatCard(
+                    title: "Ortalama Sinyal",
+                    value: "\(Int(averageSignal))/5",
+                    subtitle: "GPS sinyal gücü",
+                    icon: "antenna.radiowaves.left.and.right",
+                    color: Theme.blue400
+                )
+                
+                // Toplam Oturum
+                StatCard(
+                    title: "Toplam Oturum",
+                    value: "150",
+                    subtitle: "Toplam çalışma oturumu",
+                    icon: "person.2.circle",
+                    color: Theme.purple400
+                )
+                
+                // Aktif Oturum
+                StatCard(
+                    title: "Aktif Oturum",
+                    value: "12",
+                    subtitle: "Şu anda aktif oturum",
+                    icon: "person.2.circle.fill",
+                    color: Theme.accentPink
+                )
+            }
+        }
+    }
+    
+    private var errorSection: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .font(.title2)
+                
+                Text("İstatistik Hatası")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+            }
+            
+            VStack(spacing: 12) {
+                HStack(spacing: 16) {
+                    Image(systemName: "info.circle")
+                        .foregroundColor(Theme.gray500)
+                        .font(.title3)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Bilinmeyen hata")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(Theme.gray700)
+                        
+                        Text("İstatistikler yüklenirken bir sorun oluştu")
+                            .font(.caption)
+                            .foregroundColor(Theme.gray500)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(Theme.gray100)
+                .cornerRadius(12)
+                
+                Button(action: {
+                    // workerStatsService.refreshStats() // Geçici olarak devre dışı
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 14, weight: .medium))
+                        Text("Tekrar Dene")
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(Theme.primary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .cornerRadius(8)
+                }
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.orange.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 2)
+                )
+        )
+        .shadow(color: .orange.opacity(0.2), radius: 8, x: 0, y: 4)
     }
     
     private var quickAccessSection: some View {
@@ -474,6 +781,7 @@ struct MainView: View {
 struct StatCard: View {
     let title: String
     let value: String
+    let subtitle: String
     let icon: String
     let color: Color
     
@@ -495,6 +803,11 @@ struct StatCard: View {
                 
                 Text(title)
                     .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Text(subtitle)
+                    .font(.caption2)
                     .foregroundColor(.secondary)
             }
         }

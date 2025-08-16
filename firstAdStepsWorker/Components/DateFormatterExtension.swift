@@ -129,6 +129,34 @@ extension DateFormatter {
     }
 }
 
+extension Date {
+    func ISO8601String() -> String {
+        let formatter = ISO8601DateFormatter()
+        return formatter.string(from: self)
+    }
+    
+    func formatDateForAPI() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = AppConfig.Timezone.getCurrentTimeZone()
+        return formatter.string(from: self)
+    }
+    
+    func formatTimeForAPI() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = AppConfig.Timezone.getCurrentTimeZone()
+        return formatter.string(from: self)
+    }
+    
+    func formatDateTimeForAPI() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = AppConfig.Timezone.getCurrentTimeZone()
+        return formatter.string(from: self)
+    }
+}
+
 // String extension'ı ile kolay kullanım
 extension String {
     var toDate: Date? {

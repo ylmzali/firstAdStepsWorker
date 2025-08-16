@@ -24,8 +24,11 @@ enum AppConfig {
         static let getRoutes = "/getroutes"
         static let getRouteTrackings = "/getroutetrackings"
         // static let startRouteTracking = "/startRouteTracking"
-        static let trackRouteLocation = "/trackroutelocation"
+        static let trackRouteLocation = "/trackroutelocation" // create route sessions
+        static let trackBulkRouteLocation = "/trackbulkroutelocation"
+        static let getWorkerStats = "/getworkerstats" // bulk location tracking
         static let updateAssignmentWorkStatus = "/updateassignmentworkstatus"
+        static let saveWorkTime = "/saveworktime"
         static let getRouteTrack = "/getRouteTrack"
         static let uploadCheckpointPhoto = "/uploadCheckpointPhoto"
         static let getCheckpointPhotos = "/getCheckpointPhotos"

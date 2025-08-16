@@ -193,20 +193,20 @@ struct RoutesView: View {
     private var routeListView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // Bugünkü Rotalar
-                let todayString = DateFormatter.shortDateString(from: Date())
-                let todayRoutes = myRoutes.filter { $0.scheduleDate == todayString }
-                let waitingRoutes = myRoutes.filter { $0.scheduleDate != todayString }
-
-                if !todayRoutes.isEmpty {
+                // Aktif Rotalar (Çalışan ve Duraklatılan)
+                let activeRoutes = myRoutes.filter { 
+                    $0.workStatus == "working" || $0.workStatus == "paused" 
+                }
+                
+                if !activeRoutes.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Bugünkü Rotalar")
+                        Text("Aktif Rotalar")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(Theme.gray800)
                             .padding(.leading, 16)
                         LazyVStack(spacing: 12) {
-                            ForEach(todayRoutes) { route in
+                            ForEach(activeRoutes) { route in
                                 RouteCard(route: route) {
                                     selectedRoute = route
                                 }
@@ -217,15 +217,20 @@ struct RoutesView: View {
                     .padding(.top, 30)
                 }
 
-                if !waitingRoutes.isEmpty {
+                // Tamamlanan Rotalar
+                let completedRoutes = myRoutes.filter { 
+                    $0.workStatus == "completed" 
+                }
+                
+                if !completedRoutes.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Bekleyen Rotalar")
+                        Text("Tamamlanan Rotalar")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(Theme.gray800)
                             .padding(.leading, 16)
                         LazyVStack(spacing: 12) {
-                            ForEach(waitingRoutes) { route in
+                            ForEach(completedRoutes) { route in
                                 RouteCard(route: route) {
                                     selectedRoute = route
                                 }
@@ -235,12 +240,13 @@ struct RoutesView: View {
                     }
                     .padding(.top, 30)
                 }
-                if todayRoutes.isEmpty && waitingRoutes.isEmpty {
+                
+                if activeRoutes.isEmpty && completedRoutes.isEmpty {
                     emptyStateView
                 }
             }
             .padding(.top, 8)
-            .padding(.bottom, 24)
+            .padding(.bottom, 100) // TabBar için daha fazla boşluk
         }
     }
     

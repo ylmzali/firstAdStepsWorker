@@ -13,74 +13,44 @@ struct AssignmentDetailView: View {
     @StateObject private var routeViewModel = RouteViewModel()
     @State private var showingRejectSheet = false
     @State private var showingAcceptInfoSheet = false
-    @State private var showingAcceptConfirmSheet = false // yeni eklenen state
+    @State private var showingAcceptConfirmSheet = false
     @State private var rejectReason = ""
     @State private var isLoading = false
     @State private var showingMapOptions = false
     @State private var isRejecting = false
     @State private var isAccepting = false
+    @State private var showingCopiedAlert = false
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Header Card
-                        headerCard
-                        
-                        // Teklif Detayları
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Teklif Detayları")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(Theme.gray800)
-                            
-                            offerDetailsCard
-                        }
-                        
-                        // Harita Görüntüsü
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Rota Haritası")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(Theme.gray800)
-                            
-                            mapSnapshotCard
-                        }
-                        
-                        // Rota Bilgileri
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Rota Bilgileri")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(Theme.gray800)
-                            
-                            routeInfoCard
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 100) // Buton için alan bırak
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    // Hero Section - Rota ID
+                    heroSection
+                        .padding(.top, 20) // Section'ın dış üst tarafına boşluk
+                    
+                    // Teklif Detayları Section
+                    offerDetailsSection
+                    
+                    // Harita Section
+                    mapSection
+                    
+                    // Konum Bilgileri Section
+                    locationSection
                 }
-                
-                // Aksiyon Butonları - ScrollView dışında
-                VStack {
-                    actionButtons
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 20)
-                }
-                .background(Color.white)
-                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: -2)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 100) // Tab bar için boşluk
             }
-            .background(Theme.gray100)
-            .navigationTitle("Teklif Detayı")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("Teklif Detayları")
+            .navigationBarTitleDisplayMode(.inline)
+            .background(Color(.systemGroupedBackground))
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarBackground(Color.white, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Kapat") { dismiss() }
+                        .foregroundColor(.blue)
                 }
             }
             .sheet(isPresented: $showingRejectSheet) {
@@ -106,141 +76,35 @@ struct AssignmentDetailView: View {
                 })
             }
             .sheet(isPresented: $showingMapOptions) {
-                MapOptionsSheet(
-                    assignment: assignment,
-                    onDismiss: { showingMapOptions = false }
-                )
+                MapOptionsSheet(assignment: assignment, onDismiss: { showingMapOptions = false })
+                    .presentationDetents([.medium, .large])
+            }
+            .alert("Kopyalandı", isPresented: $showingCopiedAlert) {
+                Button("Tamam") { }
+            } message: {
+                Text("Koordinatlar panoya kopyalandı")
             }
         }
-        .preferredColorScheme(.light)
-    }
-    
-    // MARK: - Helper Functions
-    private func openInAppleMaps() {
-        // Merkez koordinatlarını kullan
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "http://maps.apple.com/?q=\(centerLat),\(centerLng)") {
-            UIApplication.shared.open(url)
+        .onAppear {
+            routeViewModel.loadAssignments()
         }
     }
     
-    private func openInGoogleMaps() {
-        // Merkez koordinatlarını kullan
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "comgooglemaps://?q=\(centerLat),\(centerLng)") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.google.com/?q=\(centerLat),\(centerLng)") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openInYandexMaps() {
-        // Merkez koordinatlarını kullan
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "yandexmaps://maps.yandex.com/?pt=\(centerLng),\(centerLat)") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.yandex.com/?pt=\(centerLng),\(centerLat)") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openRouteInAppleMaps() {
-        // Başlangıç ve bitiş noktaları ile yürüyüş rotası aç
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        // Apple Maps ile yürüyüş rotası aç
-        if let url = URL(string: "http://maps.apple.com/?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&dirflg=w") {
-            UIApplication.shared.open(url)
-        }
-    }
-    
-    private func openRouteInGoogleMaps() {
-        // Başlangıç ve bitiş noktaları ile yürüyüş rotası aç
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        // Google Maps ile yürüyüş rotası aç
-        if let url = URL(string: "comgooglemaps://?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&directionsmode=walking") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                // Google Maps yüklü değilse web versiyonunu aç
-                if let webUrl = URL(string: "https://maps.google.com/?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&dirflg=w") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openRouteInYandexMaps() {
-        // Başlangıç ve bitiş noktaları ile yürüyüş rotası aç
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        // Yandex Maps ile yürüyüş rotası aç
-        if let url = URL(string: "yandexmaps://maps.yandex.com/?rtext=\(startLat),\(startLng)~\(endLat),\(endLng)&rtt=pd") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                // Yandex Maps yüklü değilse web versiyonunu aç
-                if let webUrl = URL(string: "https://maps.yandex.com/?rtext=\(startLat),\(startLng)~\(endLat),\(endLng)&rtt=pd") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-
-    
-    private func copyToClipboard(_ text: String) {
-        UIPasteboard.general.string = text
-    }
-    
-    // RouteType'a göre geçerli koordinatları döndüren yardımcı fonksiyon
-    private func getValidCoordinates() -> (lat: String, lng: String) {
-        if assignment.routeType == "fixed_route" {
-            // Sabit rota: Başlangıç koordinatlarını kullan
-            return (assignment.startLat, assignment.startLng)
-        } else {
-            // Alan rota: Merkez koordinatlarını kullan
-            return (assignment.centerLat, assignment.centerLng)
-        }
-    }
-    
-    // MARK: - Header Card
-    private var headerCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+    // MARK: - Hero Section
+    private var heroSection: some View {
+        VStack(spacing: 16) {
+            // Teklif Başlığı ve Durum
             HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Görev #\(assignment.id)")
-                        .font(.title)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(assignment.assignmentOfferDescription ?? "Teklif Detayları")
+                        .font(.title2)
                         .fontWeight(.bold)
-                        .foregroundColor(Theme.gray800)
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
                     
-                    Text("Plan #\(assignment.planId)")
+                    Text(assignment.formattedDateTimeRange)
                         .font(.subheadline)
-                        .foregroundColor(Theme.gray600)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
@@ -248,342 +112,209 @@ struct AssignmentDetailView: View {
                 AssignmentStatusBadge(status: assignment.assignmentStatus)
             }
             
-            Divider()
-                .background(Theme.gray300)
-            
-            HStack {
-                Label(formatAssignmentDateTime(assignment), systemImage: "calendar")
-                    .font(.subheadline)
-                    .foregroundColor(Theme.gray700)
-                Spacer()
+            // Açıklama
+            if let description = assignment.assignmentOfferDescription {
+                Text(description)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .lineLimit(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Theme.purple100, lineWidth: 1)
-                )
-        )
-        .purpleShadow()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     
-    // MARK: - Offer Details Card
-    private var offerDetailsCard: some View {
+    // MARK: - Teklif Detayları Section
+    private var offerDetailsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Açıklama:")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Theme.gray800)
-                Spacer()
-            }
+            sectionHeader(title: "Teklif Detayları", icon: "doc.text.fill")
             
-            Text(self.assignment.assignmentOfferDescription ?? "Açıklama yok")
-                .font(.body)
-                .foregroundColor(Theme.gray700)
-                .lineLimit(nil)
-            
-            Divider()
-                .background(Theme.gray300)
-            
-            HStack {
-                Text("Teklif Edilen Ücret:")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Theme.gray800)
-                Spacer()
-                Text("₺\(assignment.assignmentOfferBudget)")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(Theme.success)
+            VStack(spacing: 12) {
+                detailRow(title: "Rota Tipi", value: assignment.routeType == "fixed_route" ? "Sabit Rota" : "Alan Rota", icon: "map.fill")
+                detailRow(title: "Mesafe", value: "\(assignment.radiusMeters) metre", icon: "location.fill")
+                detailRow(title: "Bütçe", value: "₺\(assignment.assignmentOfferBudget)", icon: "creditcard.fill")
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Theme.purple100, lineWidth: 1)
-                )
-        )
-        .purpleShadow()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     
-    // MARK: - Map Snapshot Card
-    private var mapSnapshotCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Group {
-                if let mapUrl = assignment.mapSnapshotUrl {
-                    Button(action: {
-                        showingMapOptions = true
-                    }) {
-                        AsyncImage(url: URL(string: "https://buisyurur.com\(mapUrl)")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .cornerRadius(12)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(Theme.gray200)
-                                .aspectRatio(16/9, contentMode: .fit)
-                                .overlay(
-                                    VStack(spacing: 12) {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: Theme.purple400))
-                                        Text("Harita yükleniyor...")
-                                            .font(.subheadline)
-                                            .foregroundColor(Theme.gray600)
-                                    }
-                                )
-                                .cornerRadius(12)
+    // MARK: - Harita Section
+    private var mapSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionHeader(title: "Harita Görüntüsü", icon: "map.fill")
+            
+            // Harita Görüntüsü
+            if let mapUrl = assignment.mapSnapshotUrl {
+                AsyncImage(url: URL(string: "https://buisyurur.com\(mapUrl)")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 200)
+                        .clipped()
+                        .cornerRadius(8)
+                        .onTapGesture {
+                            showingMapOptions = true
                         }
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                } else {
-                    Button(action: {
-                        showingMapOptions = true
-                    }) {
-                        Rectangle()
-                            .fill(Theme.gray200)
-                            .aspectRatio(16/9, contentMode: .fit)
-                            .overlay(
-                                VStack(spacing: 8) {
-                                    Image(systemName: "map")
-                                        .font(.system(size: 32))
-                                        .foregroundColor(Theme.gray400)
-                                    Text("Harita görüntüsü yok")
-                                        .font(.subheadline)
-                                        .foregroundColor(Theme.gray600)
-                                }
-                            )
-                            .cornerRadius(12)
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                } placeholder: {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 200)
+                        .overlay(
+                            VStack {
+                                Image(systemName: "map")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.gray)
+                                Text("Harita yükleniyor...")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        )
+                        .onTapGesture {
+                            showingMapOptions = true
+                        }
                 }
-            }
-        }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Theme.purple100, lineWidth: 1)
-                )
-        )
-        .purpleShadow()
-    }
-    
-    // MARK: - Route Info Card
-    private var routeInfoCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Rota Tipi:")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Theme.gray800)
-                Spacer()
-                Text(assignment.routeType == "fixed_route" ? "Sabit Rota" : "Alan Rota")
-                    .font(.subheadline)
-                    .foregroundColor(Theme.gray700)
-            }
-            
-            Divider()
-                .background(Theme.gray300)
-            
-            if assignment.routeType == "fixed_route" {
-                // Sabit Rota: Başlangıç ve Bitiş koordinatları
-                HStack {
-                    Text("Başlangıç:")
+                
+                // Harita Butonları
+                HStack(spacing: 12) {
+                    Button(action: openInAppleMaps) {
+                        HStack {
+                            Image(systemName: "map")
+                            Text("Apple Maps")
+                        }
                         .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(Theme.gray800)
-                    Spacer()
-                    Text("\(assignment.startLat), \(assignment.startLng)")
-                        .font(.caption)
-                        .foregroundColor(Theme.gray600)
-                    
-                    Button(action: {
-                        copyToClipboard("\(assignment.startLat), \(assignment.startLng)")
-                    }) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 12))
-                            .foregroundColor(Theme.primary)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue)
+                        .cornerRadius(8)
                     }
-                }
-                
-                HStack {
-                    Text("Bitiş:")
+                    
+                    Button(action: openInGoogleMaps) {
+                        HStack {
+                            Image(systemName: "globe")
+                            Text("Google Maps")
+                        }
                         .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(Theme.gray800)
-                    Spacer()
-                    Text("\(assignment.endLat), \(assignment.endLng)")
-                        .font(.caption)
-                        .foregroundColor(Theme.gray600)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.red)
+                        .cornerRadius(8)
+                    }
                     
-                    Button(action: {
-                        copyToClipboard("\(assignment.endLat), \(assignment.endLng)")
-                    }) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 12))
-                            .foregroundColor(Theme.primary)
-                    }
-                }
-                
-                Divider()
-                    .background(Theme.gray300)
-                
-                Button(action: {
-                    showingMapOptions = true
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "map")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Rotayı Harita Uygulamasında Aç")
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                    .foregroundColor(Theme.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Theme.primary.opacity(0.1))
-                    )
+                    Spacer()
                 }
             } else {
-                // Alan Rota: Merkez ve Yarıçap
-                HStack {
-                    Text("Merkez:")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(Theme.gray800)
-                    Spacer()
-                    Text("\(assignment.centerLat), \(assignment.centerLng)")
-                        .font(.caption)
-                        .foregroundColor(Theme.gray600)
-                    
-                    Button(action: {
-                        copyToClipboard("\(assignment.centerLat), \(assignment.centerLng)")
-                    }) {
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 12))
-                            .foregroundColor(Theme.primary)
-                    }
-                }
-                
-                if assignment.radiusMeters != "0" {
-                    Divider()
-                        .background(Theme.gray300)
-                    
-                    HStack {
-                        Text("Yarıçap:")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundColor(Theme.gray800)
-                        Spacer()
-                        Text("\(assignment.radiusMeters) m")
-                            .font(.subheadline)
-                            .foregroundColor(Theme.gray700)
-                    }
-                }
-                
-                Divider()
-                    .background(Theme.gray300)
-                
-                Button(action: {
-                    showingMapOptions = true
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "map")
-                            .font(.system(size: 16, weight: .medium))
-                        Text("Alanı Harita Uygulamasında Aç")
-                            .font(.system(size: 14, weight: .medium))
-                    }
-                    .foregroundColor(Theme.primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Theme.primary.opacity(0.1))
+                Text("Harita görüntüsü mevcut değil")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 40)
+            }
+        }
+        .padding(20)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+    
+    // MARK: - Konum Bilgileri Section
+    private var locationSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            sectionHeader(title: "Konum Bilgileri", icon: "location.fill")
+            
+            VStack(spacing: 12) {
+                if assignment.routeType == "fixed_route" {
+                    // Sabit rota için başlangıç ve bitiş konumları
+                    locationRow(
+                        title: "Başlangıç Konumu",
+                        coordinate: "\(assignment.startLat), \(assignment.startLng)"
+                    )
+                    locationRow(
+                        title: "Bitiş Konumu",
+                        coordinate: "\(assignment.endLat), \(assignment.endLng)"
+                    )
+                } else {
+                    // Alan rota için merkez konumu
+                    locationRow(
+                        title: "Merkez Konumu",
+                        coordinate: "\(assignment.centerLat), \(assignment.centerLng)"
                     )
                 }
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Theme.purple100, lineWidth: 1)
-                )
-        )
-        .purpleShadow()
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     
-    // MARK: - Action Buttons
-    private var actionButtons: some View {
-        VStack(spacing: 16) {
-            if assignment.assignmentStatus == .pending {
-                HStack(spacing: 12) {
-                    // Kabul Et Butonu
-                    Button(action: {
-                        showingAcceptConfirmSheet = true
-                    }, label: {
-                        Text(isAccepting ? "Kabul Ediliyor..." : "Kabul Et")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Theme.success)
-                            .cornerRadius(12)
-                            .buttonStyle(PlainButtonStyle())
-                    })
-                    .disabled(isAccepting)
-                    
-                    // Reddet Butonu
-                    Button(action: {
-                        showingRejectSheet = true
-                    }, label: {
-                        Text("Reddet")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(Theme.error)
-                            .cornerRadius(12)
-                            .buttonStyle(PlainButtonStyle())
-                    })
-                }
-            } else {
-                HStack(spacing: 12) {
-                    Image(systemName: assignment.assignmentStatus == .accepted ? "checkmark.circle.fill" : "xmark.circle.fill")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundColor(assignment.assignmentStatus == .accepted ? Color.green : Theme.error)
-                    Text(assignment.assignmentStatus == .accepted ? "Görev Kabul Edildi" : "Görev Reddedildi")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(assignment.assignmentStatus == .accepted ? Color.green : Theme.error)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(assignment.assignmentStatus == .accepted ? Color.green.opacity(0.1) : Theme.error.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(assignment.assignmentStatus == .accepted ? Theme.success.opacity(0.3) : Theme.error.opacity(0.3), lineWidth: 1)
-                        )
-                )
+    // MARK: - Helper Views
+    private func sectionHeader(title: String, icon: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .font(.title3)
+            
+            Text(title)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+            
+            Spacer()
+        }
+    }
+    
+    private func detailRow(title: String, value: String, icon: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 20)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primary)
+        }
+    }
+    
+    private func locationRow(title: String, coordinate: String) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Text(coordinate)
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                UIPasteboard.general.string = coordinate
+                showingCopiedAlert = true
+            }) {
+                Image(systemName: "doc.on.doc")
+                    .foregroundColor(.blue)
+                    .font(.subheadline)
             }
         }
+        .padding(.vertical, 8)
     }
     
     // MARK: - Actions
@@ -621,39 +352,191 @@ struct AssignmentDetailView: View {
         }
     }
     
-    // MARK: - Helper Functions
-    private func formatAssignmentDateTime(_ assignment: Assignment) -> String {
-        // Tarih formatlaması
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "tr_TR")
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        guard let date = dateFormatter.date(from: assignment.scheduleDate) else {
-            return "\(assignment.scheduleDate) \(assignment.startTime)-\(assignment.endTime)"
+    private func openInAppleMaps() {
+        let coordinate: CLLocationCoordinate2D
+        if assignment.routeType == "fixed_route" {
+            coordinate = CLLocationCoordinate2D(latitude: Double(assignment.startLat) ?? 0, longitude: Double(assignment.startLng) ?? 0)
+        } else {
+            coordinate = CLLocationCoordinate2D(latitude: Double(assignment.centerLat) ?? 0, longitude: Double(assignment.centerLng) ?? 0)
         }
-        
-        // Türkçe tarih formatı
-        let turkishDateFormatter = DateFormatter()
-        turkishDateFormatter.locale = Locale(identifier: "tr_TR")
-        turkishDateFormatter.dateFormat = "d MMMM yyyy"
-        let turkishDate = turkishDateFormatter.string(from: date)
-        
-        // Saat formatlaması
-        let startTime = formatTime(assignment.startTime)
-        let endTime = formatTime(assignment.endTime)
-        
-        return "\(turkishDate) saat \(startTime) - \(endTime) arası"
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        mapItem.name = "Rota #\(assignment.id)"
+        mapItem.openInMaps(launchOptions: nil)
     }
     
-    private func formatTime(_ timeString: String) -> String {
-        // "16:00:00" formatından "16:00" formatına çevir
-        if timeString.count >= 5 {
-            return String(timeString.prefix(5))
+    private func openInGoogleMaps() {
+        let coordinate: String
+        if assignment.routeType == "fixed_route" {
+            coordinate = "\(assignment.startLat),\(assignment.startLng)"
+        } else {
+            coordinate = "\(assignment.centerLat),\(assignment.centerLng)"
         }
-        return timeString
+        let urlString = "comgooglemaps://?q=\(coordinate)&zoom=15"
+        
+        if let url = URL(string: urlString), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            // Google Maps yüklü değilse web versiyonunu aç
+            let webUrlString = "https://www.google.com/maps?q=\(coordinate)&zoom=15"
+            if let webUrl = URL(string: webUrlString) {
+                UIApplication.shared.open(webUrl)
+            }
+        }
     }
 }
 
+// MARK: - Map Options Sheet
+struct MapOptionsSheet: View {
+    let assignment: Assignment
+    let onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Handle bar
+            RoundedRectangle(cornerRadius: 2.5)
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+            
+            // Content
+            VStack(spacing: 24) {
+                // Header
+                VStack(spacing: 8) {
+                    Text(assignment.routeType == "fixed_route" ? "Rotayı Haritada Aç" : "Alanı Haritada Aç")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary) // Başlık rengini düzelttik
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Hangi harita uygulamasını kullanmak istiyorsunuz?")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal)
+                
+                // Options
+                VStack(spacing: 12) {
+                    // Apple Maps
+                    Button(action: {
+                        openInAppleMaps()
+                        dismiss()
+                    }) {
+                        HStack(spacing: 16) {
+                            Image(systemName: "map")
+                                .font(.title2)
+                                .foregroundColor(.blue)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Apple Maps")
+                                    .font(.headline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Varsayılan harita uygulaması")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 0.5)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // Google Maps
+                    Button(action: {
+                        openInGoogleMaps()
+                        dismiss()
+                    }) {
+                        HStack(spacing: 16) {
+                            Image(systemName: "globe")
+                                .font(.title2)
+                                .foregroundColor(.red)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Google Maps")
+                                    .font(.headline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Detaylı harita ve navigasyon")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 0.5)
+                        )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+            }
+            .padding(.top, 16)
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+    
+    private func openInAppleMaps() {
+        let coordinate: CLLocationCoordinate2D
+        if assignment.routeType == "fixed_route" {
+            coordinate = CLLocationCoordinate2D(latitude: Double(assignment.startLat) ?? 0, longitude: Double(assignment.startLng) ?? 0)
+        } else {
+            coordinate = CLLocationCoordinate2D(latitude: Double(assignment.centerLat) ?? 0, longitude: Double(assignment.centerLng) ?? 0)
+        }
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        mapItem.name = "Rota #\(assignment.id)"
+        mapItem.openInMaps(launchOptions: nil)
+    }
+    
+    private func openInGoogleMaps() {
+        let coordinate: String
+        if assignment.routeType == "fixed_route" {
+            coordinate = "\(assignment.startLat),\(assignment.startLng)"
+        } else {
+            coordinate = "\(assignment.centerLat),\(assignment.centerLng)"
+        }
+        let urlString = "comgooglemaps://?q=\(coordinate)&zoom=15"
+        
+        if let url = URL(string: urlString), UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        } else {
+            // Google Maps yüklü değilse web versiyonunu aç
+            let webUrlString = "https://www.google.com/maps?q=\(coordinate)"
+            if let webUrl = URL(string: webUrlString) {
+                UIApplication.shared.open(webUrl)
+            }
+        }
+    }
+}
+
+// MARK: - Existing Sheets (Keep as is)
 struct RedReasonSheet: View {
     @Binding var reason: String
     @Binding var isLoading: Bool
@@ -697,6 +580,8 @@ struct RedReasonSheet: View {
                 Button(action: { onReject(reason) }) {
                     if isLoading {
                         ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .frame(maxWidth: .infinity)
                     } else {
                         Text("Reddet")
                             .frame(maxWidth: .infinity)
@@ -744,7 +629,6 @@ struct AcceptInfoSheet: View {
     }
 }
 
-// Yeni bottom sheet view
 struct AcceptConfirmSheet: View {
     var onConfirm: () -> Void
     var onCancel: () -> Void
@@ -785,244 +669,7 @@ struct AcceptConfirmSheet: View {
     }
 }
 
-// MARK: - Map Options Sheet
-struct MapOptionsSheet: View {
-    let assignment: Assignment
-    let onDismiss: () -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                Text(assignment.routeType == "fixed_route" ? "Rotayı Haritada Aç" : "Alanı Haritada Aç")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(Theme.gray800)
-                
-                Text(assignment.routeType == "fixed_route" ? 
-                     "Bu rotayı harita uygulamasında açarak detayları görebilirsiniz." :
-                     "Bu alanı harita uygulamasında açarak konumu görebilirsiniz.")
-                    .font(.body)
-                    .foregroundColor(Theme.gray600)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                VStack(spacing: 12) {
-                    if assignment.routeType == "fixed_route" {
-                        // Sabit rota için rota seçenekleri
-                        MapOptionButton(
-                            title: "Apple Maps'te Rota Aç",
-                            subtitle: "Yürüyüş rotası ile",
-                            icon: "map",
-                            color: Theme.primary
-                        ) {
-                            openRouteInAppleMaps()
-                            dismiss()
-                        }
-                        
-                        MapOptionButton(
-                            title: "Google Maps'te Rota Aç",
-                            subtitle: "Yürüyüş rotası ile",
-                            icon: "map",
-                            color: Theme.success
-                        ) {
-                            openRouteInGoogleMaps()
-                            dismiss()
-                        }
-                        
-                        MapOptionButton(
-                            title: "Yandex Maps'te Rota Aç",
-                            subtitle: "Yürüyüş rotası ile",
-                            icon: "map",
-                            color: Theme.warning
-                        ) {
-                            openRouteInYandexMaps()
-                            dismiss()
-                        }
-                    } else {
-                        // Alan rota için konum seçenekleri
-                        MapOptionButton(
-                            title: "Apple Maps'te Aç",
-                            subtitle: "Merkez konumu göster",
-                            icon: "location",
-                            color: Theme.primary
-                        ) {
-                            openInAppleMaps()
-                            dismiss()
-                        }
-                        
-                        MapOptionButton(
-                            title: "Google Maps'te Aç",
-                            subtitle: "Merkez konumu göster",
-                            icon: "location",
-                            color: Theme.success
-                        ) {
-                            openInGoogleMaps()
-                            dismiss()
-                        }
-                        
-                        MapOptionButton(
-                            title: "Yandex Maps'te Aç",
-                            subtitle: "Merkez konumu göster",
-                            icon: "location",
-                            color: Theme.warning
-                        ) {
-                            openInYandexMaps()
-                            dismiss()
-                        }
-                    }
-                }
-                
-                Spacer()
-            }
-            .padding()
-            .navigationTitle("Harita Seçenekleri")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Kapat") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.medium])
-    }
-    
-    // MARK: - Map Functions
-    private func openInAppleMaps() {
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "http://maps.apple.com/?q=\(centerLat),\(centerLng)") {
-            UIApplication.shared.open(url)
-        }
-    }
-    
-    private func openInGoogleMaps() {
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "comgooglemaps://?q=\(centerLat),\(centerLng)") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.google.com/?q=\(centerLat),\(centerLng)") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openInYandexMaps() {
-        let centerLat = assignment.centerLat
-        let centerLng = assignment.centerLng
-        
-        if let url = URL(string: "yandexmaps://maps.yandex.com/?pt=\(centerLng),\(centerLat)") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.yandex.com/?pt=\(centerLng),\(centerLat)") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openRouteInAppleMaps() {
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        if let url = URL(string: "http://maps.apple.com/?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&dirflg=w") {
-            UIApplication.shared.open(url)
-        }
-    }
-    
-    private func openRouteInGoogleMaps() {
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        if let url = URL(string: "comgooglemaps://?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&directionsmode=walking") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.google.com/?saddr=\(startLat),\(startLng)&daddr=\(endLat),\(endLng)&dirflg=w") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-    
-    private func openRouteInYandexMaps() {
-        let startLat = assignment.startLat
-        let startLng = assignment.startLng
-        let endLat = assignment.endLat
-        let endLng = assignment.endLng
-        
-        if let url = URL(string: "yandexmaps://maps.yandex.com/?rtext=\(startLat),\(startLng)~\(endLat),\(endLng)&rtt=pd") {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-            } else {
-                if let webUrl = URL(string: "https://maps.yandex.com/?rtext=\(startLat),\(startLng)~\(endLat),\(endLng)&rtt=pd") {
-                    UIApplication.shared.open(webUrl)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Map Option Button
-struct MapOptionButton: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-    let color: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(color)
-                    .frame(width: 24)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Theme.gray800)
-                    
-                    Text(subtitle)
-                        .font(.system(size: 12))
-                        .foregroundColor(Theme.gray600)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Theme.gray400)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Theme.gray200, lineWidth: 1)
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
 #Preview {
-    AssignmentDetailView(assignment: Assignment.preview) { _ in }
+    AssignmentDetailView(assignment: Assignment.preview, onAction: { _ in })
 } 
 
